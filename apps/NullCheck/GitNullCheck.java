@@ -1,25 +1,8 @@
-package NullCheck;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+package nullCheck;
 
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.ConditionalExpression;
-import org.eclipse.jdt.core.dom.IfStatement;
-import org.eclipse.jdt.core.dom.InfixExpression;
+import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.InfixExpression.Operator;
-import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
@@ -39,6 +22,16 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /*
  * A class for Checking the number of null checks in the repository.
@@ -91,7 +84,6 @@ public class GitNullCheck {
 		 * A loop for compairing all the commits with its previous commit.
 		 */
 
-		System.out.println(revisions.get(0).getFullMessage());
 		for (int i = totalRevs - 1; i > 0; i--) {
 			RevCommit revisionOld = revisions.get(i);
 			RevCommit revisionNew = revisions.get(i - 1);
@@ -121,6 +113,79 @@ public class GitNullCheck {
 		long endTime = System.currentTimeMillis();
 		System.out.println("Time: " + (endTime - startTime) / 1000.000);
 		System.out.println("Total null:" + totalNullChecks);
+	}
+
+	/*
+	 * Computes a list of Diffs between two revisions.
+	 *
+	 * @repository : Repository of interest
+	 *
+	 * @fromThisAndPrev: Revision number relative to head. 0 means head, 1
+	 * parent of head and 2 parent of parent of head
+	 */
+	private static List<DiffEntry> diffsBetweenTwoRevAndChangeTypes(Repository repository, int fromThisAndPrev)
+			throws RevisionSyntaxException, AmbiguousObjectException, IncorrectObjectTypeException, IOException,
+			GitAPIException {
+		// ObjectId oldHead = repository.resolve("HEAD^^^^{tree}");
+		// ObjectId head = repository.resolve("HEAD^{tree}");
+		ObjectId head = repository.resolve("HEAD~" + fromThisAndPrev + "^{tree}");
+		ObjectId oldHead = repository.resolve("HEAD~" + (fromThisAndPrev - 1) + "^{tree}");
+		List<DiffEntry> diffs = new ArrayList<>();
+		// prepare the two iterators to compute the diff between
+		try (ObjectReader reader = repository.newObjectReader()) {
+			CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
+			oldTreeIter.reset(reader, oldHead);
+			CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
+			newTreeIter.reset(reader, head);
+
+			// finally get the list of changed files
+			Git git = new Git(repository);
+			diffs = git.diff().setNewTree(newTreeIter).setOldTree(oldTreeIter).call();
+		}
+		return diffs;
+	}
+
+	private static List<DiffEntry> diffsBetweenTwoRevAndChangeTypes(Repository repository, RevCommit cur,
+																	RevCommit prev) throws RevisionSyntaxException, AmbiguousObjectException, IncorrectObjectTypeException,
+			IOException, GitAPIException {
+		List<DiffEntry> diffs = new ArrayList<>();
+		try (ObjectReader reader = repository.newObjectReader()) {
+			CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
+			oldTreeIter.reset(reader, prev.getTree());
+			CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
+			newTreeIter.reset(reader, cur.getTree());
+
+			// finally get the list of changed files
+			Git git = new Git(repository);
+			diffs = git.diff().setNewTree(newTreeIter).setOldTree(oldTreeIter).call();
+		}
+		return diffs;
+	}
+
+	/*
+	 * Reads a file from a commit id, if the file exists. Else throws
+	 * IllegalStateException
+	 */
+	private static String readFile(Repository repository, ObjectId lastCommitId, String path)
+			throws MissingObjectException, IncorrectObjectTypeException, IOException {
+		// System.out.println("reading: " + path);
+		RevWalk revWalk = new RevWalk(repository);
+		RevCommit commit = revWalk.parseCommit(lastCommitId);
+		// and using commit's tree find the path
+		RevTree tree = commit.getTree();
+		TreeWalk treeWalk = new TreeWalk(repository);
+		treeWalk.addTree(tree);
+		treeWalk.setRecursive(true);
+		treeWalk.setFilter(PathFilter.create(path));
+		if (!treeWalk.next()) {
+			throw new IllegalStateException(path);
+		}
+		ObjectId objectId = treeWalk.getObjectId(0);
+		ObjectLoader loader = repository.open(objectId);
+
+		InputStream in = loader.openStream();
+		java.util.Scanner s = new java.util.Scanner(in).useDelimiter("\\A");
+		return s.hasNext() ? s.next() : "";
 	}
 
 	/*
@@ -167,15 +232,15 @@ public class GitNullCheck {
 	/*
 	 * Given a diff, current and previous commit ids, count the number of null
 	 * checks.
-	 * 
+	 *
 	 * @diff: Current diff
-	 * 
+	 *
 	 * @oldComit: Previous commit id
-	 * 
+	 *
 	 * @newComit: Current commit id
-	 * 
+	 *
 	 * @rep: repository under consideration This function only considers the
-	 * diffs wmodified status. In all other cases, this is not a null fix. Diff
+	 * diffs with modified status. In all other cases, this is not a null fix. Diff
 	 * status: Add : Adding a new file so not a bug fix for null check Diff
 	 * status: Delete : Deleting a file will not be null check addition Diff
 	 * status: Copy : Similar to add
@@ -275,79 +340,6 @@ public class GitNullCheck {
 		parser.setCompilerOptions(options);
 		ASTNode ast = parser.createAST(null);
 		return ast;
-	}
-
-	/*
-	 * Computes a list of Diffs between two revisions.
-	 * 
-	 * @repository : Repository of interest
-	 * 
-	 * @fromThisAndPrev: Revision number relative to head. 0 means head, 1
-	 * parent of head and 2 parent of parent of head
-	 */
-	private static List<DiffEntry> diffsBetweenTwoRevAndChangeTypes(Repository repository, int fromThisAndPrev)
-			throws RevisionSyntaxException, AmbiguousObjectException, IncorrectObjectTypeException, IOException,
-			GitAPIException {
-		// ObjectId oldHead = repository.resolve("HEAD^^^^{tree}");
-		// ObjectId head = repository.resolve("HEAD^{tree}");
-		ObjectId head = repository.resolve("HEAD~" + fromThisAndPrev + "^{tree}");
-		ObjectId oldHead = repository.resolve("HEAD~" + (fromThisAndPrev - 1) + "^{tree}");
-		List<DiffEntry> diffs = new ArrayList<>();
-		// prepare the two iterators to compute the diff between
-		try (ObjectReader reader = repository.newObjectReader()) {
-			CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
-			oldTreeIter.reset(reader, oldHead);
-			CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
-			newTreeIter.reset(reader, head);
-
-			// finally get the list of changed files
-			Git git = new Git(repository);
-			diffs = git.diff().setNewTree(newTreeIter).setOldTree(oldTreeIter).call();
-		}
-		return diffs;
-	}
-
-	private static List<DiffEntry> diffsBetweenTwoRevAndChangeTypes(Repository repository, RevCommit cur,
-			RevCommit prev) throws RevisionSyntaxException, AmbiguousObjectException, IncorrectObjectTypeException,
-			IOException, GitAPIException {
-		List<DiffEntry> diffs = new ArrayList<>();
-		try (ObjectReader reader = repository.newObjectReader()) {
-			CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
-			oldTreeIter.reset(reader, prev.getTree());
-			CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
-			newTreeIter.reset(reader, cur.getTree());
-
-			// finally get the list of changed files
-			Git git = new Git(repository);
-			diffs = git.diff().setNewTree(newTreeIter).setOldTree(oldTreeIter).call();
-		}
-		return diffs;
-	}
-
-	/*
-	 * Reads a file from a commit id, if the file exists. Else throws
-	 * IllegalStateException
-	 */
-	private static String readFile(Repository repository, ObjectId lastCommitId, String path)
-			throws MissingObjectException, IncorrectObjectTypeException, IOException {
-		// System.out.println("reading: " + path);
-		RevWalk revWalk = new RevWalk(repository);
-		RevCommit commit = revWalk.parseCommit(lastCommitId);
-		// and using commit's tree find the path
-		RevTree tree = commit.getTree();
-		TreeWalk treeWalk = new TreeWalk(repository);
-		treeWalk.addTree(tree);
-		treeWalk.setRecursive(true);
-		treeWalk.setFilter(PathFilter.create(path));
-		if (!treeWalk.next()) {
-			throw new IllegalStateException(path);
-		}
-		ObjectId objectId = treeWalk.getObjectId(0);
-		ObjectLoader loader = repository.open(objectId);
-
-		InputStream in = loader.openStream();
-		java.util.Scanner s = new java.util.Scanner(in).useDelimiter("\\A");
-		return s.hasNext() ? s.next() : "";
 	}
 
 	/*
