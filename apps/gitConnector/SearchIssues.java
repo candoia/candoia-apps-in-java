@@ -18,13 +18,13 @@ import java.util.List;
 public class SearchIssues {
     private final Gson gson;
     private final Requests requests;
-    private final UrlBuilder builder;
+    private final gitConnector.UrlBuilder builder;
 
     @Inject
     public SearchIssues(Requests requests) {
         this.requests = requests;
         this.gson = new Gson();
-        this.builder = Guice.createInjector(new HttpModule()).getInstance(UrlBuilder.class);
+        this.builder = Guice.createInjector(new HttpModule()).getInstance(gitConnector.UrlBuilder.class);
     }
 
     public List<Issue> getAllProjectIssues(Project project) {
@@ -37,10 +37,9 @@ public class SearchIssues {
             String searchUrl = builder.withParam("https://api.github.com/repos")
                     .withSimpleParam("/", project.getOwner().getLogin()).withSimpleParam("/", project.getName())
                     .withParam("/issues").withParam("?state=all&").withParam("page=" + pageNumber).build();
-            System.out.println(searchUrl);
             String jsonString = requests.get(searchUrl);
             List<IssueLabel> lables = new ArrayList<IssueLabel>();
-            if (!jsonString.equals("[]") && !jsonString.contains(":API rate limit exceeded for")) {
+            if (!jsonString.equals("[]") && !jsonString.contains("\"message\":\"API rate limit exceeded for") && !jsonString.contains("bad credentials")) {
                 if (pageNumber % 10 == 0)
                     System.out.println("page:" + pageNumber);
                 try {
@@ -69,7 +68,7 @@ public class SearchIssues {
                         }
 
                     } catch (java.lang.NullPointerException ex) {
-
+                        ex.printStackTrace();
                     }
                     issue.setLabels(lables);
                     issues.add(issue);

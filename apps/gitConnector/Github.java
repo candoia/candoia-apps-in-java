@@ -23,6 +23,7 @@ public class Github {
     private Project project;
     private List<Issue> _issues;
     private List<Commit> _commits;
+    public static String oaToken = null;
 
     Github(String username, String projName) {
         Injector injector = Guice.createInjector(new SearchModule());
@@ -64,7 +65,6 @@ public class Github {
     }
 
     List<Issue> get_Issues() {
-        this._issues = this.searchIssues.getAllProjectIssues(this.project);
         this._issues = this.searchIssues.getAllProjectIssues(this.project);
         return this._issues;
     }

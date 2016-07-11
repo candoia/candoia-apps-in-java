@@ -156,12 +156,19 @@ public class GitConnector {
         return issues;
     }
 
-    public List<Integer> getIdsFromCommitMsg(String commitMsg) {
+    public List<Integer> getIdsFromCommitMsg(String commitLog) {
+        String commitMsg = commitLog;
         commitMsg = commitMsg.replaceAll("[^0-9]+", " ");
         List<String> idAsString = Arrays.asList(commitMsg.trim().split(" "));
         List<Integer> ids = new ArrayList<Integer>();
         for (String id : idAsString) {
-            ids.add(Integer.parseInt(id));
+            try{
+                if(!ids.contains(Integer.parseInt(id)))
+                    ids.add(Integer.parseInt(id));
+                System.out.print(commitLog);
+            }catch(NumberFormatException e){
+//                e.printStackTrace();
+            }
         }
         return ids;
     }
@@ -190,6 +197,7 @@ public class GitConnector {
             List<Integer> bugs = getIdsFromCommitMsg(msg);
             for (Integer i : bugs) {
                 if (ids.contains(i)) {
+                    System.out.println(msg);
                     return true;
                 }
             }
