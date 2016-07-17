@@ -24,6 +24,9 @@ public class NullCheckGit {
 
     private NullCheckGit(String repoPath) {
         this.git = new GitConnector(repoPath);
+        String[] details = repoPath.split("/");
+        this.projName = details[details.length - 1];
+        this.userName = details[details.length - 2];
     }
 
     /*
@@ -33,7 +36,7 @@ public class NullCheckGit {
         this.userName = url.substring(0, url.indexOf('@'));
         url = url.substring(url.indexOf('@') + 1);
         this.projName = url.substring(url.lastIndexOf('/') + 1);
-        final boolean b = GitConnector.cloneRepo(url, path);
+        GitConnector.cloneRepo(url, path);
         this.git = new GitConnector(path);
     }
 
@@ -45,7 +48,7 @@ public class NullCheckGit {
         NullCheckGit nullCheck = null;
         // path of the repository
         if (args.length < 1) {
-            nullCheck = new NullCheckGit("/Users/nmtiwari/Desktop/test/pagal/__clonedByBoa/compiler");
+            nullCheck = new NullCheckGit("/Users/nmtiwari/Desktop/test/pagal/__clonedByBoa/nmtiwari/compiler");
         } else if (args.length == 2) {
             nullCheck = new NullCheckGit(args[1], args[0]);
         } else {
@@ -53,10 +56,11 @@ public class NullCheckGit {
         }
 
         ArrayList<RevCommit> revisions = nullCheck.git.getAllRevisions();
+        ArrayList<RevCommit> nullFixingRevs = new ArrayList<RevCommit>();
+        ArrayList<RevCommit> fixingRevs = new ArrayList<RevCommit>();
         List<Issue> issues = nullCheck.git.getIssues(nullCheck.userName, nullCheck.projName);
         int totalRevs = revisions.size();
         System.out.println("Revisions and Issues: " + totalRevs + " " + issues.size());
-        int totalNullChecks = 0;
 
 		/*
          * From here the repository should comare each commit with its previous
@@ -83,17 +87,19 @@ public class NullCheckGit {
 				 * A loop for handling all the diffs fro this commit and
 				 * previous commit.
 				 */
+                String commitMsg = revisionNew.getFullMessage();
+                if (nullCheck.git.isFixingRevision(commitMsg)) {
+                	fixingRevs.add(revisionNew);
+                } 
                 for (DiffEntry diff : diffs) {
-                    String commitMsg = revisionNew.getFullMessage();
-                    if (nullCheck.git.isFixingRevision(commitMsg, issues)) {
-                        // count the added null checks.
-                        int nulls = nullCheck.countNullCheckAdditions(revisionNew.getId(), revisionOld.getId(), diff);
-                        if (nulls > 0) {
-//                            System.out.println("Found null checks: " + revisionNew.getFullMessage() + " " + revisionNew.getCommitTime());
-                            System.out.println("Found null checks: " + nulls);
-                        }
-                        totalNullChecks += nulls;
-                    }
+                    	if(nullCheck.git.isFixingRevision(commitMsg, issues)){
+                          // count the added null checks.
+                          nullCheck.countNullCheckAdditions(revisionNew.getId(), revisionOld.getId(), diff);
+                          nullFixingRevs.add(revisionNew);
+                          if(fixingRevs.contains(revisionNew)){
+                        	  fixingRevs.remove(revisionNew);
+                          }
+                    	}
                 }
             } catch (RevisionSyntaxException | IOException | GitAPIException e) {
                 // TODO Auto-generated catch block
@@ -101,8 +107,18 @@ public class NullCheckGit {
             }
         }
         long endTime = System.currentTimeMillis();
+        System.out.println("Total Fixing issues with null check: " + nullFixingRevs.size());
+        for(RevCommit fix: nullFixingRevs){
+        	System.out.println(fix.getId() + " -> " + fix.getFullMessage());
+        }
+        
+        
+		System.out.println("Total Fixing revision: " + fixingRevs.size());
+        for(RevCommit fix: fixingRevs){
+        	System.out.println(fix.getId() + " -> " + fix.getFullMessage());
+        }
+        
         System.out.println("Time: " + (endTime - startTime) / 1000.000);
-        System.out.println("Total null:" + totalNullChecks);
     }
 
     /*

@@ -5,7 +5,6 @@ import br.ufpe.cin.groundhog.IssueLabel;
 import br.ufpe.cin.groundhog.Project;
 import br.ufpe.cin.groundhog.http.HttpModule;
 import br.ufpe.cin.groundhog.http.Requests;
-import br.ufpe.cin.groundhog.search.UrlBuilder;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -18,19 +17,18 @@ import java.util.List;
 public class SearchIssues {
     private final Gson gson;
     private final Requests requests;
-    private final gitConnector.UrlBuilder builder;
+    private final gitConnector.URLBuilder builder;
 
     @Inject
     public SearchIssues(Requests requests) {
         this.requests = requests;
         this.gson = new Gson();
-        this.builder = Guice.createInjector(new HttpModule()).getInstance(gitConnector.UrlBuilder.class);
+        this.builder = Guice.createInjector(new HttpModule()).getInstance(gitConnector.URLBuilder.class);
     }
 
     public List<Issue> getAllProjectIssues(Project project) {
 
         int pageNumber = 1;
-        boolean check = true;
         List<Issue> issues = new ArrayList<Issue>();
 
         while (true) {

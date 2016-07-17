@@ -4,13 +4,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Map;
-import java.util.Scanner;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 
-public final class UrlBuilder {
+public final class URLBuilder {
 
     /**
      * Root sources of the API
@@ -68,7 +67,7 @@ public final class UrlBuilder {
     private final StringBuilder builder;
 
     @Inject
-    public UrlBuilder(@Named("githubOauthToken") String oauthToken) {
+    public URLBuilder(@Named("githubOauthToken") String oauthToken) {
         this.oauthToken = oauthToken;
         this.builder = new StringBuilder();
     }
@@ -81,12 +80,12 @@ public final class UrlBuilder {
      * @param api
      * @return current url representation
      */
-    public UrlBuilder uses(GithubAPI api) {
+    public URLBuilder uses(GithubAPI api) {
         this.builder.append(api.baseForm());
         return this;
     }
 
-    public UrlBuilder uses(SVNAPI api) {
+    public URLBuilder uses(SVNAPI api) {
         this.builder.append(api.baseForm());
         return this;
     }
@@ -97,7 +96,7 @@ public final class UrlBuilder {
      * @param value
      * @return current url representation
      */
-    public UrlBuilder withParam(String value) {
+    public URLBuilder withParam(String value) {
         this.builder.append(value);
         return this;
     }
@@ -110,7 +109,7 @@ public final class UrlBuilder {
      * @param value
      * @return current url representation
      */
-    public UrlBuilder withParam(String key, Object value) {
+    public URLBuilder withParam(String key, Object value) {
         String concat = isFirstParam() ? "?" : "&";
 
         String param = String.format("%s%s=%s", concat, key, value);
@@ -126,7 +125,7 @@ public final class UrlBuilder {
      * @param value
      * @return current url representation
      */
-    public UrlBuilder withSimpleParam(String key, Object value) {
+    public URLBuilder withSimpleParam(String key, Object value) {
         this.builder.append(key).append(value);
         return this;
     }
@@ -135,7 +134,7 @@ public final class UrlBuilder {
         return !builder.toString().contains("?");
     }
 
-    public UrlBuilder withParam(Map<String, Object> params) {
+    public URLBuilder withParam(Map<String, Object> params) {
         throw new UnsupportedOperationException("Sorry. Not implemented yet.");
     }
 
@@ -151,17 +150,20 @@ public final class UrlBuilder {
         if(Github.oaToken == null){
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             System.out.println("Please provide your authentication token: ");
-            try {
-                this.oauthToken = br.readLine();
+//            try {
+//                this.oauthToken = br.readLine();
+//                Github.oaToken = this.oauthToken;
+//            } catch (java.io.IOException ioe) {
+//            }finally{
+//                try {
+//                    br.close();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+            
+                this.oauthToken = new String(Github.readPassword());
                 Github.oaToken = this.oauthToken;
-            } catch (java.io.IOException ioe) {
-            }finally{
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
         }else{
             this.oauthToken = Github.oaToken;
         }

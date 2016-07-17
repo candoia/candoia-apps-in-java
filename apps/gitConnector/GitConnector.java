@@ -39,8 +39,8 @@ public class GitConnector {
     private FileRepositoryBuilder builder;
     private Repository repository;
     private Git git;
-    private String userName;
-    private String projName;
+//    private String userName;
+//    private String projName;
 
     public GitConnector(String path) {
         this.builder = new FileRepositoryBuilder();
@@ -62,7 +62,7 @@ public class GitConnector {
         return false;
     }
 
-    private static boolean isFixingRevision(String commitLog) {
+    public boolean isFixingRevision(String commitLog) {
         boolean isFixing = false;
         Pattern p;
         if (commitLog != null) {
@@ -87,7 +87,6 @@ public class GitConnector {
         try {
             allRevisions = git.log().call();
         } catch (GitAPIException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
@@ -98,7 +97,7 @@ public class GitConnector {
     }
 
     public ASTNode createAst(String fileContent) {
-        Map options = JavaCore.getOptions();
+        Map<String, String> options = JavaCore.getOptions();
         options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
         options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
         options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
@@ -113,7 +112,7 @@ public class GitConnector {
             throws RevisionSyntaxException,
             IOException, GitAPIException {
         List<DiffEntry> diffs = new ArrayList<>();
-        try (ObjectReader reader = this.repository.newObjectReader()) {
+      ObjectReader reader = this.repository.newObjectReader();
             CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
             oldTreeIter.reset(reader, prev.getTree());
             CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
@@ -121,7 +120,6 @@ public class GitConnector {
 
             // finally get the list of changed files
             diffs = this.git.diff().setNewTree(newTreeIter).setOldTree(oldTreeIter).call();
-        }
         return diffs;
     }
 
@@ -146,8 +144,12 @@ public class GitConnector {
         ObjectId objectId = treeWalk.getObjectId(0);
         ObjectLoader loader = this.repository.open(objectId);
         InputStream in = loader.openStream();
-        java.util.Scanner s = new java.util.Scanner(in).useDelimiter("\\A");
-        return s.hasNext() ? s.next() : "";
+        java.util.Scanner s = new java.util.Scanner(in); 
+        s.useDelimiter("\\A");
+        String result = s.hasNext() ? s.next() : "";
+        s.close();
+        in.close();
+        return result;
     }
 
     public List<Issue> getIssues(String username, String projName) {
@@ -165,7 +167,6 @@ public class GitConnector {
             try{
                 if(!ids.contains(Integer.parseInt(id)))
                     ids.add(Integer.parseInt(id));
-                System.out.print(commitLog);
             }catch(NumberFormatException e){
 //                e.printStackTrace();
             }
@@ -197,7 +198,6 @@ public class GitConnector {
             List<Integer> bugs = getIdsFromCommitMsg(msg);
             for (Integer i : bugs) {
                 if (ids.contains(i)) {
-                    System.out.println(msg);
                     return true;
                 }
             }
