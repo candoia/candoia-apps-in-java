@@ -1,5 +1,23 @@
 package gitConnector;
 
+import br.ufpe.cin.groundhog.Issue;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.errors.RevisionSyntaxException;
+import org.eclipse.jgit.lib.*;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevTree;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.treewalk.CanonicalTreeParser;
+import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.treewalk.filter.PathFilter;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,28 +28,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.errors.RevisionSyntaxException;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.ObjectLoader;
-import org.eclipse.jgit.lib.ObjectReader;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
-import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-import org.eclipse.jgit.treewalk.CanonicalTreeParser;
-import org.eclipse.jgit.treewalk.TreeWalk;
-import org.eclipse.jgit.treewalk.filter.PathFilter;
-
-import br.ufpe.cin.groundhog.Issue;
-
 /**
  * Created by nmtiwari on 7/9/16.
  */
@@ -40,11 +36,13 @@ public class GitConnector {
 	private FileRepositoryBuilder builder;
 	private Repository repository;
 	private Git git;
+	private String path;
 	// private String userName;
 	// private String projName;
 
 	public GitConnector(String path) {
 		this.builder = new FileRepositoryBuilder();
+		this.path = path;
 		try {
 			this.repository = this.builder.setGitDir(new File(path + "/.git")).setMustExist(true).build();
 			this.git = new Git(this.repository);
@@ -248,5 +246,47 @@ public class GitConnector {
 		RevWalk revWalk = new RevWalk(repository);
 		return revWalk.parseCommit(ObjectId.fromString(commit));
 
+	}
+
+	public List<String> getAllFilesFromHead() {
+		ArrayList<String> results = new ArrayList<>();
+		try {
+			Ref head = this.repository.getRef("HEAD");
+			RevWalk walk = new RevWalk(this.repository);
+			RevCommit revision = walk.parseCommit(head.getObjectId());
+			RevTree tree = revision.getTree();
+			TreeWalk walker = new TreeWalk(this.repository);
+			walker.addTree(tree);
+			walker.setRecursive(true);
+//		Can set a filter to read all java files only
+//		walker.setFilter(PathFilter.create("README.md"));
+			while (walker.next()) {
+				results.add(walker.getPathString());
+			}
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		return results;
+	}
+
+	public List<String> getAllFilesFromHeadWithAbsPath() {
+		ArrayList<String> results = new ArrayList<>();
+		try {
+			Ref head = this.repository.getRef("HEAD");
+			RevWalk walk = new RevWalk(this.repository);
+			RevCommit revision = walk.parseCommit(head.getObjectId());
+			RevTree tree = revision.getTree();
+			TreeWalk walker = new TreeWalk(this.repository);
+			walker.addTree(tree);
+			walker.setRecursive(true);
+//		Can set a filter to read all java files only
+//		walker.setFilter(PathFilter.create("README.md"));
+			while (walker.next()) {
+				results.add(this.path + "/" + walker.getPathString());
+			}
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		return results;
 	}
 }
