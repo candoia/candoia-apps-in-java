@@ -66,7 +66,7 @@ public class FileAssociationMining {
             RevCommit revision = revisions.get(i);
             try {
                 String filesInRev = "";
-                List<String> files = readElementsAt(repository, revision.getId().getName());
+                List<String> files = mining.git.readElementsAt(repository, revision.getId().getName());
                 for (String name : files) {
                     filesInRev += ("," + name);
                     if (!mining.fileIndex.containsValue(name)) {
@@ -83,34 +83,6 @@ public class FileAssociationMining {
         saveToFile(buildArffFile(associations, mining.fileIndex), "/Users/nmtiwari/Desktop/output.arff");
     }
 
-    private static List<String> readElementsAt(Repository repository, String commit) throws IOException {
-        RevCommit revCommit = buildRevCommit(repository, commit);
-
-        // and using commit's tree find the path
-        RevTree tree = revCommit.getTree();
-        //System.out.println("Having tree: " + tree + " for commit " + commit);
-
-        List<String> items = new ArrayList<>();
-
-        // shortcut for root-path
-        try (TreeWalk treeWalk = new TreeWalk(repository)) {
-            treeWalk.addTree(tree);
-            treeWalk.setRecursive(true);
-            treeWalk.setPostOrderTraversal(true);
-
-            while (treeWalk.next()) {
-                items.add(treeWalk.getPathString());
-            }
-        }
-        return items;
-    }
-
-    private static RevCommit buildRevCommit(Repository repository, String commit) throws IOException {
-        // a RevWalk allows to walk over commits based on some filtering that is defined
-        try (RevWalk revWalk = new RevWalk(repository)) {
-            return revWalk.parseCommit(ObjectId.fromString(commit));
-        }
-    }
 
     private static void saveToFile(String strContent, String fileNameAndPath) {
         BufferedWriter bufferedWriter = null;
