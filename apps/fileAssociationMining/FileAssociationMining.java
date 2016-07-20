@@ -129,7 +129,7 @@ public class FileAssociationMining {
             try {
                 if (bufferedWriter != null) bufferedWriter.close();
             } catch (Exception ex) {
-
+                ex.printStackTrace();
             }
         }
     }
