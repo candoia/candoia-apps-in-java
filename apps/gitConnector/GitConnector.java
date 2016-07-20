@@ -62,6 +62,10 @@ public class GitConnector {
         return false;
     }
 
+    public Repository getRepository() {
+        return this.repository;
+    }
+
     public boolean isFixingRevision(String commitLog) {
         boolean isFixing = false;
         Pattern p;

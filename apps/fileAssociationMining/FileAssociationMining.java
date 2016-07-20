@@ -1,0 +1,168 @@
+package fileAssociationMining;
+
+import gitConnector.GitConnector;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevTree;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.treewalk.TreeWalk;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+/**
+ * Created by nmtiwari on 7/19/16.
+ */
+public class FileAssociationMining {
+    private GitConnector git;
+    private String userName;
+    private String projName;
+    private HashMap<Integer, String> fileIndex;
+
+    private FileAssociationMining(String repoPath) {
+        this.git = new GitConnector(repoPath);
+        String[] details = repoPath.split("/");
+        this.projName = details[details.length - 1];
+        this.userName = details[details.length - 2];
+        this.fileIndex = new HashMap<Integer, String>();
+    }
+
+    /*
+     * url must be of form: username@url
+     */
+    public FileAssociationMining(String url, String path) {
+        this.userName = url.substring(0, url.indexOf('@'));
+        url = url.substring(url.indexOf('@') + 1);
+        this.projName = url.substring(url.lastIndexOf('/') + 1);
+        GitConnector.cloneRepo(url, path);
+        this.git = new GitConnector(path);
+    }
+
+    /*
+ * Main function for FileAssociation Mining
+ */
+    public static void main(String[] args) {
+        long startTime = System.currentTimeMillis();
+        int index = 0;
+        FileAssociationMining mining = null;
+        // path of the repository
+        if (args.length < 1) {
+            mining = new FileAssociationMining("/Users/nmtiwari/Desktop/test/pagal/__clonedByBoa/ddmills/flash.card.java");
+        } else if (args.length == 2) {
+            mining = new FileAssociationMining(args[1], args[0]);
+        } else {
+            mining = new FileAssociationMining(args[0]);
+        }
+
+        ArrayList<RevCommit> revisions = mining.git.getAllRevisions();
+        int totalRevs = revisions.size();
+        List<String> associations = new ArrayList<>();
+
+        Repository repository = mining.git.getRepository();
+        for (int i = 0; i < totalRevs; i++) {
+            RevCommit revision = revisions.get(i);
+            try {
+                String filesInRev = "";
+                List<String> files = readElementsAt(repository, revision.getId().getName());
+                for (String name : files) {
+                    filesInRev += ("," + name);
+                    if (!mining.fileIndex.containsValue(name)) {
+                        mining.fileIndex.put(index, name);
+                        index++;
+                    }
+                }
+                associations.add(filesInRev.substring(1));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println(mining.fileIndex.size());
+        saveToFile(buildArffFile(associations, mining.fileIndex), "/Users/nmtiwari/Desktop/output.arff");
+    }
+
+    private static List<String> readElementsAt(Repository repository, String commit) throws IOException {
+        RevCommit revCommit = buildRevCommit(repository, commit);
+
+        // and using commit's tree find the path
+        RevTree tree = revCommit.getTree();
+        //System.out.println("Having tree: " + tree + " for commit " + commit);
+
+        List<String> items = new ArrayList<>();
+
+        // shortcut for root-path
+        try (TreeWalk treeWalk = new TreeWalk(repository)) {
+            treeWalk.addTree(tree);
+            treeWalk.setRecursive(true);
+            treeWalk.setPostOrderTraversal(true);
+
+            while (treeWalk.next()) {
+                items.add(treeWalk.getPathString());
+            }
+        }
+        return items;
+    }
+
+    private static RevCommit buildRevCommit(Repository repository, String commit) throws IOException {
+        // a RevWalk allows to walk over commits based on some filtering that is defined
+        try (RevWalk revWalk = new RevWalk(repository)) {
+            return revWalk.parseCommit(ObjectId.fromString(commit));
+        }
+    }
+
+    private static void saveToFile(String strContent, String fileNameAndPath) {
+        BufferedWriter bufferedWriter = null;
+        try {
+            File myFile = new File(fileNameAndPath);
+            // check if file exist, otherwise create the file before writing
+            if (!myFile.exists()) {
+                myFile.createNewFile();
+            }
+            Writer writer = new FileWriter(myFile);
+            bufferedWriter = new BufferedWriter(writer);
+            bufferedWriter.write(strContent);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (bufferedWriter != null) bufferedWriter.close();
+            } catch (Exception ex) {
+
+            }
+        }
+    }
+
+    private static String buildArffFile(List<String> text, HashMap<Integer, String> fileIndex) {
+        StringBuilder br = new StringBuilder();
+        br.append(buildArffheader(fileIndex.size()));
+        for (String str : text) {
+            String entry = "";
+            for (Integer i : fileIndex.keySet()) {
+                String fileName = fileIndex.get(i);
+                if (str.contains(fileName)) {
+                    entry += ("," + fileName);
+                } else {
+                    entry += (",?");
+                }
+            }
+            br.append(entry.substring(1));
+            br.append("\n");
+        }
+        return br.toString();
+    }
+
+    private static String buildArffheader(int size) {
+        StringBuilder br = new StringBuilder();
+        br.append("@RELATION FileCoupling\n");
+        for (int index = 0; index < size; index++) {
+            br.append("@ATTRIBUTE file");
+            br.append(index);
+            br.append(" string\n");
+        }
+        br.append("@DATA\n");
+        return br.toString();
+    }
+
+}
