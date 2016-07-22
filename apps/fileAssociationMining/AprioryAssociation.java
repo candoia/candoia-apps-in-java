@@ -15,13 +15,13 @@ public class AprioryAssociation {
         Apriori model = new Apriori();
         String[] options = new String[2];
         options[0] = "-R";                // "range"
-        options[1] = "last";                 // first attribute
+        options[1] = "first-last";                 // first attribute
 
-        weka.filters.unsupervised.attribute.StringToNominal ff = new weka.filters.unsupervised.attribute.StringToNominal(); // new instance of filter
+        weka.filters.unsupervised.attribute.StringToNominal strToNom = new weka.filters.unsupervised.attribute.StringToNominal(); // new instance of filter
 
-        ff.setOptions(options);                           // set options
-        ff.setInputFormat(data);                          // inform filter about dataset **AFTER** setting options
-        Instances data2 = Filter.useFilter(data, ff);
+        strToNom.setOptions(options);                           // set options
+        strToNom.setInputFormat(data);                          // inform filter about dataset **AFTER** setting options
+        Instances data2 = Filter.useFilter(data, strToNom);
         model.buildAssociations(data2);
         System.out.println(model);
     }

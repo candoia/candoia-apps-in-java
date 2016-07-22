@@ -1,12 +1,8 @@
 package fileAssociationMining;
 
 import gitConnector.GitConnector;
-import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
-import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.treewalk.TreeWalk;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -15,6 +11,9 @@ import java.util.List;
 
 /**
  * Created by nmtiwari on 7/19/16.
+ * FileAssociationMining: A class for getting file associations between revisions
+ * @username: github username for project owner
+ * @projName: project name
  */
 public class FileAssociationMining {
     private GitConnector git;
@@ -42,8 +41,11 @@ public class FileAssociationMining {
     }
 
     /*
- * Main function for FileAssociation Mining
- */
+     * Main function for FileAssociation Mining
+     * This function creates a string for each revision and also create a map. In arff format every item has to be at fixed
+     * location in all occurances. Hence we need to assign a number to each file. That number represents the index for that
+     * text.
+    */
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
         int index = 0;
@@ -57,10 +59,13 @@ public class FileAssociationMining {
             mining = new FileAssociationMining(args[0]);
         }
 
+        // get all revisions
         ArrayList<RevCommit> revisions = mining.git.getAllRevisions();
         int totalRevs = revisions.size();
+        // a list of files
         List<String> associations = new ArrayList<>();
 
+        // git repository
         Repository repository = mining.git.getRepository();
         for (int i = 0; i < totalRevs; i++) {
             RevCommit revision = revisions.get(i);
@@ -83,7 +88,7 @@ public class FileAssociationMining {
         saveToFile(buildArffFile(associations, mining.fileIndex), "/Users/nmtiwari/Desktop/output.arff");
     }
 
-
+    // save the content in a file at given path.
     private static void saveToFile(String strContent, String fileNameAndPath) {
         BufferedWriter bufferedWriter = null;
         try {
@@ -106,6 +111,9 @@ public class FileAssociationMining {
         }
     }
 
+    /*
+     * This function create an arff format for given list of text
+     */
     private static String buildArffFile(List<String> text, HashMap<Integer, String> fileIndex) {
         StringBuilder br = new StringBuilder();
         br.append(buildArffheader(fileIndex.size()));

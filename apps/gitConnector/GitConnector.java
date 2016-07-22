@@ -30,8 +30,10 @@ import java.util.regex.Pattern;
 
 /**
  * Created by nmtiwari on 7/9/16.
+ * This is class for handling git connections and cloning from repo
  */
 public class GitConnector {
+	// patters to check if fixings
 	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
 	private FileRepositoryBuilder builder;
 	private Repository repository;
@@ -51,6 +53,7 @@ public class GitConnector {
 		}
 	}
 
+	// clone the repository from remote at given local path
 	public static boolean cloneRepo(String URL, String repoPath) {
 		// String url = URL.substring(URL.indexOf('@') + 1, URL.length()) +
 		// ".git";
@@ -66,6 +69,11 @@ public class GitConnector {
 		return this.repository;
 	}
 
+	/*
+	 * @commitLog: commit message
+	 * returns boolean
+	 * Checks if the revision has any of the fixing patterns
+	 */
 	public boolean isFixingRevision(String commitLog) {
 		boolean isFixing = false;
 		Pattern p;
@@ -84,6 +92,9 @@ public class GitConnector {
 		return isFixing;
 	}
 
+	/*
+	 * A function to get all the revisions of the repository
+	 */
 	public ArrayList<RevCommit> getAllRevisions() {
 		ArrayList<RevCommit> revisions = new ArrayList<>();
 
@@ -100,6 +111,10 @@ public class GitConnector {
 		return revisions;
 	}
 
+	/*
+	 * @fileContent: A file content as string
+	 * returns AST of the content using Java JDT.
+	 */
 	public ASTNode createAst(String fileContent) {
 		Map<String, String> options = JavaCore.getOptions();
 		options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
@@ -112,6 +127,11 @@ public class GitConnector {
 		return ast;
 	}
 
+	/*
+ 	 * @cur: Current revision
+ 	 * @prev: previsous revision
+ 	 * Returns a list of DiffEntries from the current and previous revision
+ 	*/
 	public List<DiffEntry> diffsBetweenTwoRevAndChangeTypes(RevCommit cur, RevCommit prev)
 			throws RevisionSyntaxException, IOException, GitAPIException {
 		List<DiffEntry> diffs = new ArrayList<>();
@@ -154,12 +174,21 @@ public class GitConnector {
 		return result;
 	}
 
+	/*
+	 * @username: Repository username
+     * @projName: project name
+     * retuns a list of issues from the git tickets using the username and projName
+     */
 	public List<Issue> getIssues(String username, String projName) {
 		Github git = new Github(username, projName);
 		List<Issue> issues = git.get_Issues();
 		return issues;
 	}
 
+	/*
+	 * A simple method which fetches all the numbers from the string.
+	 * Note: It does not verify if the numbers are real bug ids or not.
+	 */
 	public List<Integer> getIdsFromCommitMsg(String commitLog) {
 		String commitMsg = commitLog;
 		commitMsg = commitMsg.replaceAll("[^0-9]+", " ");
@@ -176,6 +205,9 @@ public class GitConnector {
 		return ids;
 	}
 
+	/*
+	 * A method to get all issue ids for given username and projName.
+	 */
 	public List<Integer> getIssueIds(String username, String projName) {
 		Github git = new Github(username, projName);
 		List<Issue> issues = git.get_Issues();
@@ -186,6 +218,9 @@ public class GitConnector {
 		return ids;
 	}
 
+	/*
+	 * A overloaded version of getIssueIds
+	 */
 	public List<Integer> getIssueIds(List<Issue> issues) {
 		List<Integer> ids = new ArrayList<Integer>();
 		for (Issue issue : issues) {
@@ -194,6 +229,9 @@ public class GitConnector {
 		return ids;
 	}
 
+	/*
+	 * A method to get a list of issue numbers. Issue number is different than issue id.
+     */
 	public List<Integer> getIssueNumbers(List<Issue> issues) {
 		List<Integer> ids = new ArrayList<Integer>();
 		for (Issue issue : issues) {
@@ -201,7 +239,12 @@ public class GitConnector {
 		}
 		return ids;
 	}
-	
+
+	/*
+	 * @msg: COmmit message
+	 * @issues: list of all issues
+	 * return boolean if this msg contains any real bug id or not
+	 */
 	public boolean isFixingRevision(String msg, List<Issue> issues) {
 		if (isFixingRevision(msg)) {
 			List<Integer> ids = getIssueNumbers(issues);
@@ -215,10 +258,28 @@ public class GitConnector {
 		return false;
 	}
 
-	public List<Integer> getIssueIDsFromCommitLog(String log) {
-		return getIdsFromCommitMsg(log);
+	/*
+	 * @log: commit message
+	 * @issues: list of all issues
+	 * returns a list of integers representing issue numbers.
+	 * This method gives you actual issue numbers.
+	 */
+	public List<Integer> getIssueIDsFromCommitLog(String log, List<Issue> issues) {
+		List<Integer> ids = getIdsFromCommitMsg(log);
+		List<Integer> bugs = new ArrayList<>();
+		for (Integer i : ids) {
+			if (isBug(issues, i)) {
+				bugs.add(i);
+			}
+		}
+		return bugs; 
 	}
 
+	/*
+	 * @repository: Git repository
+	 * @commit: revision id
+	 * Returns list of file paths from this revision of given repository
+	 */
 	public List<String> readElementsAt(Repository repository, String commit) throws IOException {
 		RevCommit revCommit = buildRevCommit(repository, commit);
 
@@ -240,6 +301,11 @@ public class GitConnector {
 		return items;
 	}
 
+	/*
+	 * @repository: Git Repository
+	 * @commit: Revsion id
+	 * returns a revision commit version of the revision id
+	 */
 	public RevCommit buildRevCommit(Repository repository, String commit) throws IOException {
 		// a RevWalk allows to walk over commits based on some filtering that is
 		// defined
@@ -248,6 +314,10 @@ public class GitConnector {
 
 	}
 
+	/*
+	 * A method to get all the files from the head version. It is kind of
+     * getting latest revision of the repository.
+     */
 	public List<String> getAllFilesFromHead() {
 		ArrayList<String> results = new ArrayList<>();
 		try {
@@ -288,5 +358,19 @@ public class GitConnector {
 			ex.printStackTrace();
 		}
 		return results;
+	}
+
+	/*
+	 * @issues: List of all github issues
+	 * @id: integer
+	 * returns if id is actual bug id or not
+	 */
+	private boolean isBug(List<Issue> issues, int id) {
+		for (Issue issue : issues) {
+			if (id == issue.getNumber()) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

@@ -14,6 +14,9 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+ * A class for searching all the issues of the github repository
+ */
 public class SearchIssues {
     private final Gson gson;
     private final Requests requests;
@@ -26,6 +29,10 @@ public class SearchIssues {
         this.builder = Guice.createInjector(new HttpModule()).getInstance(gitConnector.URLBuilder.class);
     }
 
+    /*
+     * @project: groundhog project object
+     * Returns a list of all the issues from the project
+     */
     public List<Issue> getAllProjectIssues(Project project) {
 
         int pageNumber = 1;

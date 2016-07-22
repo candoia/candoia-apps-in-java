@@ -121,10 +121,6 @@ public class NullCheckGit {
         System.out.println("Time: " + (endTime - startTime) / 1000.000);
     }
 
-    /*
- * A function to check if commit message is fixing one or not. This is based
- * on pattern match.
- */
 
     private int countNullCheckAdditions(ObjectId lastCommitId, ObjectId oldCommit, DiffEntry diff) {
         int numOfNullCheckAdds = 0;
