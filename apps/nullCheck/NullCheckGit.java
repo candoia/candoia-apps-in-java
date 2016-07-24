@@ -11,6 +11,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -48,7 +49,7 @@ public class NullCheckGit {
         NullCheckGit nullCheck = null;
         // path of the repository
         if (args.length < 1) {
-            nullCheck = new NullCheckGit("/Users/nmtiwari/Desktop/test/pagal/__clonedByBoa/nmtiwari/compiler");
+            nullCheck = new NullCheckGit("/Users/nmtiwari/Desktop/test/pagal/__clonedByBoa/boalang/compiler");
         } else if (args.length == 2) {
             nullCheck = new NullCheckGit(args[1], args[0]);
         } else {
@@ -94,10 +95,9 @@ public class NullCheckGit {
                 for (DiffEntry diff : diffs) {
                     	if(nullCheck.git.isFixingRevision(commitMsg, issues)){
                           // count the added null checks.
-                          nullCheck.countNullCheckAdditions(revisionNew.getId(), revisionOld.getId(), diff);
-                          nullFixingRevs.add(revisionNew);
-                          if(fixingRevs.contains(revisionNew)){
-                        	  fixingRevs.remove(revisionNew);
+                            int count = nullCheck.countNullCheckAdditions(revisionNew.getId(), revisionOld.getId(), diff);
+                            if (count > 0) {
+                                nullFixingRevs.add(revisionNew);
                           }
                     	}
                 }
@@ -107,17 +107,11 @@ public class NullCheckGit {
             }
         }
         long endTime = System.currentTimeMillis();
-        System.out.println("Total Fixing issues with null check: " + nullFixingRevs.size());
-        for(RevCommit fix: nullFixingRevs){
-        	System.out.println(fix.getId() + " -> " + fix.getFullMessage());
-        }
-        
-        
-		System.out.println("Total Fixing revision: " + fixingRevs.size());
-        for(RevCommit fix: fixingRevs){
-        	System.out.println(fix.getId() + " -> " + fix.getFullMessage());
-        }
-        
+        HashMap<String, Integer> result = new HashMap<>();
+        result.put("total revs", totalRevs);
+        result.put("fixing revisions", fixingRevs.size());
+        result.put("Null fixing revisions", nullFixingRevs.size());
+        NullFixingGraph.saveGraph(result, "/Users/nmtiwari/Desktop/null.html");
         System.out.println("Time: " + (endTime - startTime) / 1000.000);
     }
 
@@ -143,7 +137,8 @@ public class NullCheckGit {
                 e.printStackTrace();
             }
             if (nullInNew > nullInOld) {
-                numOfNullCheckAdds++;
+//                numOfNullCheckAdds++;
+                numOfNullCheckAdds = numOfNullCheckAdds + (nullInNew - nullInOld);
             }
         }
         return numOfNullCheckAdds;
