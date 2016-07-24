@@ -37,9 +37,23 @@ public class MethodUsageFrequency {
     }
 
     /*
+   * Main function for NullCheckGit
+   */
+    public static void main(String[] args) {
+        long startTime = System.currentTimeMillis();
+
+        HashMap<String, Integer> indexMap = MethodUsageFrequency.analyze(args);
+        for (String str : indexMap.keySet()) {
+            System.out.println(str + " -> " + indexMap.get(str));
+        }
+        MethodUsageCharting.saveGraph(indexMap, "/Users/nmtiwari/Desktop/graph.html");
+    }
+
+
+    /*
      * Main function for NullCheckGit
      */
-    public static void main(String[] args) {
+    public static HashMap<String, Integer> analyze(String[] args) {
         long startTime = System.currentTimeMillis();
         MethodUsageFrequency freq = null;
         // path of the repository
@@ -53,22 +67,17 @@ public class MethodUsageFrequency {
 
         List<String> allFiles = freq.git.getAllFilesFromHeadWithAbsPath();
         HashMap<String, Integer> indexMap = new HashMap<String, Integer>();
-        HashMap<String, String> varTypMapper = new HashMap<String, String>();
-        HashMap<String, String> varTypMap = new HashMap<String, String>();
+        HashMap<String, String> varTyp = new HashMap<String, String>();
 
         for (String path : allFiles) {
             if (path.endsWith(".java")) {
-                HashMap<String, String> varTyp = varTypMapper;
                 String content = freq.readFile(path);
                 ASTNode ast = freq.git.createAst(content);
                 varTyp = countMethodCallFreqWithTypes(ast, varTyp);
                 indexMap = countMethodCallFreq(ast, indexMap, varTyp);
             }
         }
-
-        for (String str : indexMap.keySet()) {
-            System.out.println(str + " -> " + indexMap.get(str));
-        }
+        return indexMap;
     }
 
 
