@@ -99,9 +99,15 @@ public class BugSrcFileMapper {
 
         // print all the values
         System.out.println(issues.toString());
+        HashMap<String, Integer> bugCounter = new HashMap<>();
         System.out.println("Total buggy files: " + bugsrcMapper.fileBugIndex.size());
         for (String name : bugsrcMapper.fileBugIndex.keySet()) {
-            System.out.println(name + " -> " + bugsrcMapper.fileBugIndex.get(name));
+            int count = bugsrcMapper.fileBugIndex.get(name).size();
+            System.out.println(name + " -> " + count);
+            if (count > 1) {
+                bugCounter.put(name, count);
+            }
         }
+        BugSrcFileMapperGraph.saveGraph(bugCounter, "/Users/nmtiwari/Desktop/bug.html");
     }
 }
