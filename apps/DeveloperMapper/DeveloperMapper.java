@@ -1,7 +1,19 @@
-package developerMapper;
+package DeveloperMapper;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
@@ -20,14 +32,6 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /*
  * A class for Checking the number of null checks in the repository.
@@ -121,7 +125,7 @@ public class DeveloperMapper {
 																	RevCommit prev) throws RevisionSyntaxException, AmbiguousObjectException, IncorrectObjectTypeException,
 			IOException, GitAPIException {
 		List<DiffEntry> diffs = new ArrayList<>();
-		try (ObjectReader reader = repository.newObjectReader()) {
+		ObjectReader reader = repository.newObjectReader();
 			CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
 			oldTreeIter.reset(reader, prev.getTree());
 			CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
@@ -130,7 +134,6 @@ public class DeveloperMapper {
 			// finally get the list of changed files
 			Git git = new Git(repository);
 			diffs = git.diff().setNewTree(newTreeIter).setOldTree(oldTreeIter).call();
-		}
 		return diffs;
 	}
 
