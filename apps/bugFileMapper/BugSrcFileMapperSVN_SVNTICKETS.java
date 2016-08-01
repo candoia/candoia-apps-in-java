@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.io.SVNRepository;
 
 import svnConnector.SVNCommit;
@@ -40,7 +41,12 @@ public class BugSrcFileMapperSVN_SVNTICKETS {
         this.userName = url.substring(0, url.indexOf('@'));
         url = url.substring(url.indexOf('@') + 1);
         this.projName = url.substring(url.lastIndexOf('/') + 1);
-        SVNRepositoryCloner.clone(url, path);
+        try {
+			SVNRepositoryCloner.clone(url, path);
+		} catch (SVNException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         this.svn = new SVNConnector(path);
     }
 
@@ -55,7 +61,7 @@ public class BugSrcFileMapperSVN_SVNTICKETS {
         if (args.length < 1) {
             bugsrcMapper = new BugSrcFileMapperSVN_SVNTICKETS("/Users/nmtiwari/Desktop/test/pagal/__clonedByBoa/projects/paninij");
         } else if (args.length == 2) {
-            bugsrcMapper = new BugSrcFileMapperSVN_SVNTICKETS(args[1], args[0]);
+            bugsrcMapper = new BugSrcFileMapperSVN_SVNTICKETS(args[0], args[1]);
         } else {
             bugsrcMapper = new BugSrcFileMapperSVN_SVNTICKETS(args[0]);
         }

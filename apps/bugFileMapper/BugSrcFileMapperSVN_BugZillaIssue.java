@@ -1,9 +1,11 @@
 package bugFileMapper;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.io.SVNRepository;
 
 import issues.ImportBugzillaReports;
@@ -25,16 +27,6 @@ public class BugSrcFileMapperSVN_BugZillaIssue {
 	private String bugURL;
 	private String product;
 
-	private BugSrcFileMapperSVN_BugZillaIssue(String repoPath, String bug_url) {
-		this.svn = new SVNConnector(repoPath);
-		String[] details = repoPath.split("/");
-		this.projName = details[details.length - 1];
-		this.userName = details[details.length - 2];
-		this.fileBugIndex = new HashMap<>();
-		this.bugURL = bug_url.substring(bug_url.indexOf('@') + 1);
-		this.product = bug_url.substring(0, bug_url.indexOf('@'));
-	}
-
 	/*
 	 * url must be of form: username@url
 	 */
@@ -42,7 +34,11 @@ public class BugSrcFileMapperSVN_BugZillaIssue {
 		this.userName = url.substring(0, url.indexOf('@'));
 		url = url.substring(url.indexOf('@') + 1);
 		this.projName = url.substring(url.lastIndexOf('/') + 1);
-		SVNRepositoryCloner.clone(url, path);
+//		try {
+//			SVNRepositoryCloner.clone(url, path);
+//		} catch (SVNException e) {
+//			e.printStackTrace();
+//		}
 		this.svn = new SVNConnector(path);
 		this.bugURL = bug_url.substring(bug_url.indexOf('@') + 1);
 		this.product = bug_url.substring(0, bug_url.indexOf('@'));
@@ -56,13 +52,11 @@ public class BugSrcFileMapperSVN_BugZillaIssue {
 		int index = 0;
 		BugSrcFileMapperSVN_BugZillaIssue bugsrcMapper = null;
 		// path of the repository
-		if (args.length < 2) {
-			bugsrcMapper = new BugSrcFileMapperSVN_BugZillaIssue("/Users/nmtiwari/Desktop/test/pagal/svn",
-					"Tomcat 8@https://bz.apache.org/bugzilla/");
-		} else if (args.length == 2) {
-			bugsrcMapper = new BugSrcFileMapperSVN_BugZillaIssue(args[0], args[1]);
-		} else {
+		if (args.length == 3) {
 			bugsrcMapper = new BugSrcFileMapperSVN_BugZillaIssue(args[0], args[1], args[2]);
+		} else {
+			bugsrcMapper = new BugSrcFileMapperSVN_BugZillaIssue("nmtiwari@/Users/nmtiwari/Desktop/test/pagal/panini/",
+					"/Users/nmtiwari/Desktop/test/pagal/panini/svn", "Tomcat 8@https://bz.apache.org/bugzilla");
 		}
 		// get all the revisions of the project
 		ArrayList<SVNCommit> revisions = bugsrcMapper.svn.getAllRevisions();
@@ -82,7 +76,6 @@ public class BugSrcFileMapperSVN_BugZillaIssue {
 
 		// check all the revisions
 		for (int i = 0; i < totalRevs; i++) {
-			System.out.println(i);
 			SVNCommit revision = revisions.get(i);
 			// check if the revision is bug fixing revision or a simple revision
 			if (bugs.isFixingRevision(revision.getMessage(), issues)) {
