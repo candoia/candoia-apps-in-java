@@ -18,13 +18,13 @@ import java.util.List;
 /**
  * Created by nmtiwari on 7/24/16.
  */
-public class ChurnRate {
+public class ChurnRateGit {
     private GitConnector git;
     private String userName;
     private String projName;
     private String localPath;
 
-    private ChurnRate(String repoPath) {
+    private ChurnRateGit(String repoPath) {
         this.git = new GitConnector(repoPath);
         String[] details = repoPath.split("/");
         this.projName = details[details.length - 1];
@@ -35,7 +35,7 @@ public class ChurnRate {
     /*
      * url must be of form: username@url
      */
-    private ChurnRate(String url, String path) {
+    private ChurnRateGit(String url, String path) {
         this.userName = url.substring(0, url.indexOf('@'));
         url = url.substring(url.indexOf('@') + 1);
         this.projName = url.substring(url.lastIndexOf('/') + 1);
@@ -48,14 +48,14 @@ public class ChurnRate {
      */
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
-        ChurnRate churn = null;
+        ChurnRateGit churn = null;
         // path of the repository
         if (args.length < 1) {
-            churn = new ChurnRate("/Users/nmtiwari/Desktop/test/pagal/__clonedByBoa/boalang/compiler");
+            churn = new ChurnRateGit("/Users/nmtiwari/Desktop/test/pagal/__clonedByBoa/boalang/compiler");
         } else if (args.length == 2) {
-            churn = new ChurnRate(args[1], args[0]);
+            churn = new ChurnRateGit(args[1], args[0]);
         } else {
-            churn = new ChurnRate(args[0]);
+            churn = new ChurnRateGit(args[0]);
         }
 
         ArrayList<RevCommit> revisions = churn.git.getAllRevisions();
