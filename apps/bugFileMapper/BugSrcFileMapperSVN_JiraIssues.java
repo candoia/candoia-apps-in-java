@@ -59,11 +59,11 @@ public class BugSrcFileMapperSVN_JiraIssues {
 		ArrayList<SVNCommit> revisions = bugsrcMapper.svn.getAllRevisions();
 		int totalRevs = revisions.size();
 		// get all the issues of the projects.
-		JiraIssues bugs = new JiraIssues(bugsrcMapper.bugURL);
+		JiraIssues bugs = new JiraIssues(bugsrcMapper.bugURL, bugsrcMapper.product);
 		List<b4j.core.Issue> issues = new ArrayList<>();
 		System.out.println(bugsrcMapper.bugURL + "\n" + bugsrcMapper.product);
 		try {
-			issues = bugs.importJiraIssues(bugsrcMapper.bugURL);
+			issues = bugs.importJiraIssues();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

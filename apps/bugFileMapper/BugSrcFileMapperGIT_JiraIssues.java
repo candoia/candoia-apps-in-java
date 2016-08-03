@@ -8,7 +8,6 @@ import java.util.List;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.tmatesoft.svn.core.SVNException;
 
 import gitConnector.GitConnector;
 import gitConnector.Github;
@@ -44,6 +43,7 @@ public class BugSrcFileMapperGIT_JiraIssues {
 		this.git = new GitConnector(path);
 		this.bugURL = bug_url.substring(bug_url.indexOf('@') + 1);
 		this.product = bug_url.substring(0, bug_url.indexOf('@'));
+		fileBugIndex = new HashMap<>();
 	}
 
 	/*
@@ -64,11 +64,11 @@ public class BugSrcFileMapperGIT_JiraIssues {
 		ArrayList<RevCommit> revisions = bugsrcMapper.git.getAllRevisions();
 		int totalRevs = revisions.size();
 		// get all the issues of the projects.
-		JiraIssues bugs = new JiraIssues(bugsrcMapper.bugURL);
+		JiraIssues bugs = new JiraIssues(bugsrcMapper.bugURL, bugsrcMapper.product);
 		List<b4j.core.Issue> issues = new ArrayList<>();
 		System.out.println(bugsrcMapper.bugURL + "\n" + bugsrcMapper.product);
 		try {
-			issues = bugs.importJiraIssues(bugsrcMapper.bugURL);
+			issues = bugs.importJiraIssues();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -15,24 +15,20 @@ import b4j.core.Issue;
 import b4j.core.session.AbstractHttpSession;
 import b4j.core.session.JiraRpcSession;
 
-public class JiraIssues {
+public class JiraIssues{
+	static int ids = 0;
 	private String url;
-	private String project;
-	private ArrayList<Issue> issues;
+	private String product;
 	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
-
-	public JiraIssues(String url) {
+	
+	public JiraIssues(String url, String product){
 		this.url = url;
-		this.issues = new ArrayList<>();
+		this.product = product;
 	}
 
-	public JiraIssues(String project, String url) {
-		this.project = project;
-		this.url = url;
-		this.issues = new ArrayList<>();
-	}
-
-	public ArrayList<Issue> importJiraIssues(String url) {
+	public final List<Issue> importJiraIssues() {
+		// system.out.println("url in importbugs:"+url);
+		List<Issue> issues = new ArrayList<>();
 		AbstractHttpSession session = new JiraRpcSession();
 		try {
 			((JiraRpcSession) session).setBaseUrl(new URL(url));
@@ -40,15 +36,24 @@ public class JiraIssues {
 
 			if (session.open()) {
 				DefaultSearchData searchData = new DefaultSearchData();
-//				searchData.add("jql", "project = " + project);
-				 searchData.add("jql", "project = HADOOP COMMON");
-				// AND issuetype = Bug AND status in (Resolved, Closed) AND
-				// resolution = Fixed
+				searchData.add("jql", "project = " + product);
+				searchData.add("limit", "0");
+				// searchData.add("jql", "project = HADOOP COMMON AND issuetype
+				// = Bug AND status in (Resolved, Closed) AND resolution =
+				// Fixed");
+				searchData.add("issuetype", "bug");
+				searchData.add("status", "Resolved");
 				Iterator i = session.searchBugs(searchData, null).iterator();
 
 				while (i.hasNext()) {
-					// Issue issue = (Issue) i.next();
-					// issues.add(issue);
+					Issue issue = (Issue) i.next();
+					System.out.println(issue.getId());
+					;
+					try {
+						issues.add(issue);
+					} catch (Exception e) {
+						System.out.println("Exception found in issue : " + issue.getId());
+					}
 				}
 
 				// system.out.println("Total issues : " + issues.size());
@@ -59,15 +64,83 @@ public class JiraIssues {
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 			session.close();
-			return issues;
+			return new ArrayList<>();
 		}
 	}
 
+
+	public static void main(String[] args) {
+		JiraIssues jira = new JiraIssues("https://issues.apache.org/jira/","HADOOP");
+//		JiraIssues jira = new JiraIssues("http://jira.qos.ch/","SLF4J");
+		jira.importJiraIssues();
+	}
+
+	/*
+	 * @log: commit message
+	 * @issues: list of all issues
+	 * returns a list of integers representing issue numbers.
+	 * This method gives you actual issue numbers.
+	 */
+	public List<Integer> getIssueIDsFromCommitLog(String log, List<b4j.core.Issue> issues) {
+		List<Integer> ids = getIdsFromCommitMsg(log);
+		List<Integer> bugs = new ArrayList<>();
+		for (Integer i : ids) {
+			if (isBug(issues, i)) {
+				bugs.add(i);
+			}
+		}
+		return bugs; 
+	}
+	
+	/*
+	 * @issues: List of all github issues
+	 * @id: integer
+	 * returns if id is actual bug id or not
+	 */
+	private boolean isBug(List<b4j.core.Issue> issues, int id) {
+		for (Issue issue : issues) {
+			if ((id+"").equals(issue.getId())) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/*
+	 * A method to get a list of issue numbers. Issue number is different than issue id.
+     */
+	public List<String> getIssueNumbers(List<b4j.core.Issue> issues) {
+		List<String> ids = new ArrayList<String>();
+		for (b4j.core.Issue issue : issues) {
+			ids.add(issue.getId());
+		}
+		return ids;
+	}
+	
+	/*
+	 * A simple method which fetches all the numbers from the string.
+	 * Note: It does not verify if the numbers are real bug ids or not.
+	 */
+	public List<Integer> getIdsFromCommitMsg(String commitLog) {
+		String commitMsg = commitLog;
+		commitMsg = commitMsg.replaceAll("[^0-9]+", " ");
+		List<String> idAsString = Arrays.asList(commitMsg.trim().split(" "));
+		List<Integer> ids = new ArrayList<Integer>();
+		for (String id : idAsString) {
+			try {
+				if (!ids.contains(Integer.parseInt(id)))
+					ids.add(Integer.parseInt(id));
+			} catch (NumberFormatException e) {
+				// e.printStackTrace();
+			}
+		}
+		return ids;
+	}
+	
 	/*
 	 * @msg: COmmit message
-	 * 
-	 * @issues: list of all issues return boolean if this msg contains any real
-	 * bug id or not
+	 * @issues: list of all issues
+	 * return boolean if this msg contains any real bug id or not
 	 */
 	public boolean isFixingRevision(String msg, List<b4j.core.Issue> issues) {
 		if (isFixingRevision(msg)) {
@@ -81,10 +154,11 @@ public class JiraIssues {
 		}
 		return false;
 	}
-
+	
 	/*
-	 * @commitLog: commit message returns boolean Checks if the revision has any
-	 * of the fixing patterns
+	 * @commitLog: commit message
+	 * returns boolean
+	 * Checks if the revision has any of the fixing patterns
 	 */
 	public boolean isFixingRevision(String commitLog) {
 		boolean isFixing = false;
@@ -103,67 +177,5 @@ public class JiraIssues {
 		}
 		return isFixing;
 	}
-
-	/*
-	 * A method to get a list of issue numbers. Issue number is different than
-	 * issue id.
-	 */
-	public List<String> getIssueNumbers(List<b4j.core.Issue> issues) {
-		List<String> ids = new ArrayList<String>();
-		for (b4j.core.Issue issue : issues) {
-			ids.add(issue.getId());
-		}
-		return ids;
-	}
-
-	/*
-	 * A simple method which fetches all the numbers from the string. Note: It
-	 * does not verify if the numbers are real bug ids or not.
-	 */
-	public List<Integer> getIdsFromCommitMsg(String commitLog) {
-		String commitMsg = commitLog;
-		commitMsg = commitMsg.replaceAll("[^0-9]+", " ");
-		List<String> idAsString = Arrays.asList(commitMsg.trim().split(" "));
-		List<Integer> ids = new ArrayList<Integer>();
-		for (String id : idAsString) {
-			try {
-				if (!ids.contains(Integer.parseInt(id)))
-					ids.add(Integer.parseInt(id));
-			} catch (NumberFormatException e) {
-				// e.printStackTrace();
-			}
-		}
-		return ids;
-	}
-
-	/*
-	 * @log: commit message
-	 * 
-	 * @issues: list of all issues returns a list of integers representing issue
-	 * numbers. This method gives you actual issue numbers.
-	 */
-	public List<Integer> getIssueIDsFromCommitLog(String log, List<b4j.core.Issue> issues) {
-		List<Integer> ids = getIdsFromCommitMsg(log);
-		List<Integer> bugs = new ArrayList<>();
-		for (Integer i : ids) {
-			if (isBug(issues, i)) {
-				bugs.add(i);
-			}
-		}
-		return bugs;
-	}
-
-	/*
-	 * @issues: List of all github issues
-	 * 
-	 * @id: integer returns if id is actual bug id or not
-	 */
-	private boolean isBug(List<b4j.core.Issue> issues, int id) {
-		for (Issue issue : issues) {
-			if ((id + "").equals(issue.getId())) {
-				return true;
-			}
-		}
-		return false;
-	}
+	
 }
