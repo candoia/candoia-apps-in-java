@@ -11,17 +11,17 @@ import java.util.List;
 
 /**
  * Created by nmtiwari on 7/19/16.
- * FileAssociationMining: A class for getting file associations between revisions
+ * FileAssociationMining_GIT: A class for getting file associations between revisions
  * @username: github username for project owner
  * @projName: project name
  */
-public class FileAssociationMining {
+public class FileAssociationMining_GIT {
     private GitConnector git;
     private String userName;
     private String projName;
     private HashMap<Integer, String> fileIndex;
 
-    private FileAssociationMining(String repoPath) {
+    private FileAssociationMining_GIT(String repoPath) {
         this.git = new GitConnector(repoPath);
         String[] details = repoPath.split("/");
         this.projName = details[details.length - 1];
@@ -32,7 +32,7 @@ public class FileAssociationMining {
     /*
      * url must be of form: username@url
      */
-    public FileAssociationMining(String url, String path) {
+    public FileAssociationMining_GIT(String url, String path) {
         this.userName = url.substring(0, url.indexOf('@'));
         url = url.substring(url.indexOf('@') + 1);
         this.projName = url.substring(url.lastIndexOf('/') + 1);
@@ -49,14 +49,15 @@ public class FileAssociationMining {
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
         int index = 0;
-        FileAssociationMining mining = null;
+        FileAssociationMining_GIT mining = null;
+        String arffPath = "/Users/nmtiwari/Desktop/output.arff";
         // path of the repository
         if (args.length < 1) {
-            mining = new FileAssociationMining("/Users/nmtiwari/Desktop/test/pagal/__clonedByBoa/ddmills/flash.card.java");
+            mining = new FileAssociationMining_GIT("/Users/nmtiwari/Desktop/test/pagal/__clonedByBoa/ddmills/flash.card.java");
         } else if (args.length == 2) {
-            mining = new FileAssociationMining(args[1], args[0]);
+            mining = new FileAssociationMining_GIT(args[1], args[0]);
         } else {
-            mining = new FileAssociationMining(args[0]);
+            mining = new FileAssociationMining_GIT(args[0]);
         }
 
         // get all revisions
@@ -85,7 +86,8 @@ public class FileAssociationMining {
             }
         }
         System.out.println(mining.fileIndex.size());
-        saveToFile(buildArffFile(associations, mining.fileIndex), "/Users/nmtiwari/Desktop/output.arff");
+        saveToFile(buildArffFile(associations, mining.fileIndex), arffPath);
+        AprioryAssociation.runAssociation(arffPath);
     }
 
     // save the content in a file at given path.

@@ -11,6 +11,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 
 import gitConnector.GitConnector;
 import gitConnector.Github;
+import issues.ImportBugzillaReports;
 import issues.JiraIssues;
 
 /**
@@ -19,7 +20,7 @@ import issues.JiraIssues;
  * change in this files. Note: Class does not check for what the change was but
  * only checks if it was in the same commit, which fixed the bug.
  */
-public class BugSrcFileMapperGIT_JiraIssues {
+public class BugSrcFileMapperGIT_Bugzilla {
 	private GitConnector git;
 	private String userName;
 	private String projName;
@@ -30,7 +31,7 @@ public class BugSrcFileMapperGIT_JiraIssues {
 	/*
 	 * url must be of form: username@url
 	 */
-	public BugSrcFileMapperGIT_JiraIssues(String url, String path, String bug_url) {
+	public BugSrcFileMapperGIT_Bugzilla(String url, String path, String bug_url) {
 		this.userName = url.substring(0, url.indexOf('@'));
 		url = url.substring(url.indexOf('@') + 1);
 		this.projName = url.substring(url.lastIndexOf('/') + 1);
@@ -52,23 +53,23 @@ public class BugSrcFileMapperGIT_JiraIssues {
 	public static void main(String[] args) {
 		long startTime = System.currentTimeMillis();
 		int index = 0;
-		BugSrcFileMapperGIT_JiraIssues bugsrcMapper = null;
+		BugSrcFileMapperGIT_Bugzilla bugsrcMapper = null;
 		// path of the repository
 		if (args.length == 3) {
-			bugsrcMapper = new BugSrcFileMapperGIT_JiraIssues(args[0], args[1], args[2]);
+			bugsrcMapper = new BugSrcFileMapperGIT_Bugzilla(args[0], args[1], args[2]);
 		} else {
-			bugsrcMapper = new BugSrcFileMapperGIT_JiraIssues("nmtiwari@https://github.com/qos-ch/slf4j",
-					"/Users/nmtiwari/Desktop/test/pagal/slf4j", "SLF4J@http://jira.qos.ch/");
+			bugsrcMapper = new BugSrcFileMapperGIT_Bugzilla("nmtiwari@https://github.com/qos-ch/slf4j",
+					"/Users/nmtiwari/Desktop/test/pagal/slf4j", "Tomcat 8@https://bz.apache.org/bugzilla");
 		}
 		// get all the revisions of the project
 		ArrayList<RevCommit> revisions = bugsrcMapper.git.getAllRevisions();
 		int totalRevs = revisions.size();
 		// get all the issues of the projects.
-		JiraIssues bugs = new JiraIssues(bugsrcMapper.bugURL, bugsrcMapper.product);
+		ImportBugzillaReports bugs = new ImportBugzillaReports();
 		List<b4j.core.Issue> issues = new ArrayList<>();
 		System.out.println(bugsrcMapper.bugURL + "\n" + bugsrcMapper.product);
 		try {
-			issues = bugs.importJiraIssues();
+			issues = bugs.importBugs(bugsrcMapper.bugURL, bugsrcMapper.product);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

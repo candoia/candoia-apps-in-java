@@ -1,9 +1,7 @@
 package svnConnector;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,6 +16,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
+import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
@@ -28,7 +27,6 @@ import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
 import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
-import org.tmatesoft.svn.core.io.SVNFileRevision;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
@@ -69,6 +67,18 @@ public class SVNConnector {
 		this.url = null;
 		this.authManager = null;
 		this.repository = null;
+	}
+
+	// clone the repository from remote at given local path
+	public static boolean cloneRepo(String URL, String repoPath) {
+		// String url = URL.substring(URL.indexOf('@') + 1, URL.length()) +
+		// ".git";
+		try {
+			SVNRepositoryCloner.clone(URL, repoPath);
+		} catch (SVNException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	public SVNConnector(final String url, final String username, final String password) {
@@ -188,8 +198,14 @@ public class SVNConnector {
 		ASTParser parser = ASTParser.newParser(AST.JLS3);
 		parser.setSource(fileContent.toCharArray());
 		parser.setCompilerOptions(options);
-		ASTNode ast = parser.createAST(null);
-		return ast;
+		try {
+			ASTNode ast = parser.createAST(null);
+			return ast;
+		} catch (Exception e) {
+			parser.setSource(" ".toCharArray());
+			ASTNode ast = parser.createAST(null);
+			return ast;
+		}
 	}
 
 	public SVNRepository getRepository() {
@@ -305,39 +321,62 @@ public class SVNConnector {
 		return svn.getTickets(proj);
 	}
 
-	public List<String> readElementsAt(SVNRepository repository2, long id) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Collection diffsBetweenTwoRevAndChangeTypes(SVNCommit revisionNew, SVNCommit revisionOld) {
+	public ArrayList<SVNLogEntry> diffsBetweenTwoRevAndChangeTypes(SVNCommit revisionNew, SVNCommit revisionOld) {
 		try {
 			repository.setAuthenticationManager(authManager);
 			Collection logEntries = new ArrayList<>();
+			ArrayList<SVNLogEntry> result = new ArrayList<>();
 			logEntries = repository.log(new String[] { "" }, null, revisionOld.getId(), revisionNew.getId(), true,
 					true);
 
 			for (Iterator entries = logEntries.iterator(); entries.hasNext();) {
 				SVNLogEntry logEntry = (SVNLogEntry) entries.next();
-				System.out.println(String.format("revision: %d, date %s", logEntry.getRevision(), logEntry.getDate()));
+				result.add(logEntry);
+				// System.out.println(String.format("revision: %d, date %s",
+				// logEntry.getRevision(), logEntry.getDate()));
 			}
-			return logEntries;
+			return result;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
 
 	}
-	
-	public String getFileContent(String filePath, long revisionId, SVNProperties svnProperties, ByteArrayOutputStream os){
+
+	public String getFileContent(String filePath, long revisionId, SVNProperties svnProperties,
+			ByteArrayOutputStream os) {
 		try {
 			this.repository.getFile(filePath, revisionId, svnProperties, os);
 			return os.toString();
 		} catch (SVNException e) {
 			// TODO Auto-generated catch block
-//			e.printStackTrace();
+			// e.printStackTrace();
 		}
 		return "";
 	}
 
+	public ArrayList<String> getAllFilesFromHead(ArrayList<String> results) {
+		try {
+			return listEntries(results, "", "");
+			// return listEntries(results, "", this.url.getPath()+"/");
+		} catch (SVNException e) {
+			e.printStackTrace();
+		}
+		return results;
+	}
+
+	private ArrayList<String> listEntries(ArrayList<String> results, String path, String rootPath) throws SVNException {
+		Collection entries = this.repository.getDir(path, -1, new SVNProperties(), (Collection) null);
+		Iterator iterator = entries.iterator();
+		while (iterator.hasNext()) {
+			SVNDirEntry entry = (SVNDirEntry) iterator.next();
+			if (entry.getKind() == SVNNodeKind.FILE) {
+				results.add((path.equals("")) ? rootPath + entry.getName() : rootPath + path + "/" + entry.getName());
+			}
+			if (entry.getKind() == SVNNodeKind.DIR) {
+				listEntries(results, (path.equals("")) ? entry.getName() : path + "/" + entry.getName(), rootPath);
+			}
+		}
+		return results;
+	}
 }

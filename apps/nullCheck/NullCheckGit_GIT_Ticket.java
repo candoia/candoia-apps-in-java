@@ -18,12 +18,12 @@ import java.util.List;
  * Created by nmtiwari on 7/9/16.
  * A class to check all the Null Checks in the subjected repository.
  */
-public class NullCheckGit {
+public class NullCheckGit_GIT_Ticket {
     private GitConnector git;
     private String userName;
     private String projName;
 
-    private NullCheckGit(String repoPath) {
+    private NullCheckGit_GIT_Ticket(String repoPath) {
         this.git = new GitConnector(repoPath);
         String[] details = repoPath.split("/");
         this.projName = details[details.length - 1];
@@ -33,7 +33,7 @@ public class NullCheckGit {
     /*
      * url must be of form: username@url
      */
-    private NullCheckGit(String url, String path) {
+    private NullCheckGit_GIT_Ticket(String url, String path) {
         this.userName = url.substring(0, url.indexOf('@'));
         url = url.substring(url.indexOf('@') + 1);
         this.projName = url.substring(url.lastIndexOf('/') + 1);
@@ -42,18 +42,18 @@ public class NullCheckGit {
     }
 
     /*
-     * Main function for NullCheckGit
+     * Main function for NullCheckGit_GIT_Ticket
      */
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
-        NullCheckGit nullCheck = null;
+        NullCheckGit_GIT_Ticket nullCheck = null;
         // path of the repository
         if (args.length < 1) {
-            nullCheck = new NullCheckGit("/Users/nmtiwari/Desktop/test/pagal/__clonedByBoa/boalang/compiler");
+            nullCheck = new NullCheckGit_GIT_Ticket("/Users/nmtiwari/Desktop/test/pagal/__clonedByBoa/boalang/compiler");
         } else if (args.length == 2) {
-            nullCheck = new NullCheckGit(args[1], args[0]);
+            nullCheck = new NullCheckGit_GIT_Ticket(args[1], args[0]);
         } else {
-            nullCheck = new NullCheckGit(args[0]);
+            nullCheck = new NullCheckGit_GIT_Ticket(args[0]);
         }
 
         ArrayList<RevCommit> revisions = nullCheck.git.getAllRevisions();

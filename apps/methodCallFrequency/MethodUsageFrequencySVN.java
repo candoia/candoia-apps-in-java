@@ -59,7 +59,7 @@ public class MethodUsageFrequencySVN {
 	}
 
 	/*
-	 * Main function for NullCheckGit
+	 * Main function for NullCheckGit_GIT_Ticket
 	 */
 	public static void main(String[] args) {
 		long startTime = System.currentTimeMillis();
@@ -79,7 +79,7 @@ public class MethodUsageFrequencySVN {
 	}
 
 	/*
-	 * Main function for NullCheckGit
+	 * Main function for NullCheckGit_GIT_Ticket
 	 */
 	public static HashMap<String, Integer> analyze(String[] args) {
 		long startTime = System.currentTimeMillis();

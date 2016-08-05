@@ -26,6 +26,14 @@ public class AprioryAssociation {
         System.out.println(model);
     }
 
+    public static void runAssociation(String file){
+        try {
+            performAssociation(file);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
     public static void main(String[] args) {
         try {
             performAssociation("/Users/nmtiwari/Desktop/output.arff");
