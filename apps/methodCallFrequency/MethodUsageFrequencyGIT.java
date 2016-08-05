@@ -13,12 +13,12 @@ import java.util.List;
 /**
  * Created by nmtiwari on 7/20/16.
  */
-public class MethodUsageFrequency {
+public class MethodUsageFrequencyGIT {
     private GitConnector git;
     private String userName;
     private String projName;
 
-    private MethodUsageFrequency(String repoPath) {
+    private MethodUsageFrequencyGIT(String repoPath) {
         this.git = new GitConnector(repoPath);
         String[] details = repoPath.split("/");
         this.projName = details[details.length - 1];
@@ -28,7 +28,7 @@ public class MethodUsageFrequency {
     /*
      * url must be of form: username@url
      */
-    private MethodUsageFrequency(String url, String path) {
+    private MethodUsageFrequencyGIT(String url, String path) {
         this.userName = url.substring(0, url.indexOf('@'));
         url = url.substring(url.indexOf('@') + 1);
         this.projName = url.substring(url.lastIndexOf('/') + 1);
@@ -42,7 +42,7 @@ public class MethodUsageFrequency {
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
 
-        HashMap<String, Integer> indexMap = MethodUsageFrequency.analyze(args);
+        HashMap<String, Integer> indexMap = MethodUsageFrequencyGIT.analyze(args);
         for (String str : indexMap.keySet()) {
             System.out.println(str + " -> " + indexMap.get(str));
         }
@@ -55,14 +55,14 @@ public class MethodUsageFrequency {
      */
     public static HashMap<String, Integer> analyze(String[] args) {
         long startTime = System.currentTimeMillis();
-        MethodUsageFrequency freq = null;
+        MethodUsageFrequencyGIT freq = null;
         // path of the repository
         if (args.length < 1) {
-            freq = new MethodUsageFrequency("/Users/nmtiwari/git/research/candoia/candoia-apps-in-java");
+            freq = new MethodUsageFrequencyGIT("/Users/nmtiwari/git/research/candoia/candoia-apps-in-java");
         } else if (args.length == 2) {
-            freq = new MethodUsageFrequency(args[1], args[0]);
+            freq = new MethodUsageFrequencyGIT(args[1], args[0]);
         } else {
-            freq = new MethodUsageFrequency(args[0]);
+            freq = new MethodUsageFrequencyGIT(args[0]);
         }
 
         List<String> allFiles = freq.git.getAllFilesFromHeadWithAbsPath();
