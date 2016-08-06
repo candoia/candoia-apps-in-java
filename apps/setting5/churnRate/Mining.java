@@ -1,6 +1,5 @@
 package setting5.churnRate;
 
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -11,36 +10,28 @@ import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
-import org.tmatesoft.svn.core.SVNProperties;
+
+import settging1.churnRate.Visualization;
 
 /**
  * Created by nmtiwari on 7/24/16.
  */
 public class Mining {
 	private VCSModule svn;
-	private String userName;
-	private String projName;
-	private String localPath;
-
+	public String url;
 	private Mining(String repoPath) {
 		this.svn = new VCSModule(repoPath);
-		String[] details = repoPath.split("/");
-		this.projName = details[details.length - 1];
-		this.userName = details[details.length - 2];
-		this.localPath = repoPath.substring(0, repoPath.lastIndexOf('/'));
 	}
 
 	/*
 	 * url must be of form: username@url
 	 */
 	private Mining(String url, String path) {
-		this.userName = url.substring(0, url.indexOf('@'));
+		this.url = url;
 		url = url.substring(url.indexOf('@') + 1);
-		this.projName = url.substring(url.lastIndexOf('/') + 1);
 		try {
 			ForgeModule.clone(url, path);
 		} catch (SVNException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		this.svn = new VCSModule(path);
@@ -53,18 +44,14 @@ public class Mining {
 		long startTime = System.currentTimeMillis();
 		Mining churn = null;
 		// path of the repository
-		if (args.length < 1) {
-			churn = new Mining("/Users/nmtiwari/Desktop/test/pagal/projects");
-		} else if (args.length == 2) {
-			churn = new Mining(args[1], args[0]);
+		if (args.length == 2) {
+			churn = new Mining(args[0], args[1]);
 		} else {
-			churn = new Mining(args[0]);
+			throw new IllegalArgumentException();
 		}
 
 		ArrayList<SVNCommit> revisions = churn.svn.getAllRevisions();
-		ArrayList<SVNCommit> nullFixingRevs = new ArrayList<SVNCommit>();
-		ArrayList<SVNCommit> fixingRevs = new ArrayList<SVNCommit>();
-		int totalRevs = revisions.size();
+		double totalRevs = revisions.size();
 
 		/*
 		 * From here the repository should comare each commit with its previous
@@ -81,7 +68,7 @@ public class Mining {
 		 * A loop for comparing all the commits with its previous commit.
 		 */
 		HashMap<String, Integer> churnDetails = new HashMap<>();
-		for (int i = totalRevs - 1; i > 0; i--) {
+		for (int i = (int) (totalRevs - 1); i > 0; i--) {
 			SVNCommit revisionOld = revisions.get(i);
 			SVNCommit revisionNew = revisions.get(i - 1);
 			try {
@@ -93,13 +80,18 @@ public class Mining {
 					Map<String, SVNLogEntryPath> changedPaths = entry.getChangedPaths();
 					for (String str : changedPaths.keySet()) {
 						SVNLogEntryPath path = changedPaths.get(str);
-						churnDetails = churn.countNumberOfLinesChange(path, revisionNew.getId(), revisionOld.getId(),
-								entry, churnDetails);
+
+						if (path.getType() == SVNLogEntryPath.TYPE_REPLACED) {
+							churnDetails.put(path.getCopyPath(), churnDetails.get(path.getPath() + 1));
+						} else if (path.getType() == SVNLogEntryPath.TYPE_ADDED) {
+							churnDetails.put(path.getPath(), 1);
+						} else if (path.getType() == SVNLogEntryPath.TYPE_MODIFIED) {
+							churnDetails.put(path.getPath(), churnDetails.get(path.getPath() + 1));
+						}
 					}
 
 				}
 			} catch (RevisionSyntaxException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -107,60 +99,11 @@ public class Mining {
 		HashMap<String, Double> result = new HashMap<>();
 		for (String key : churnDetails.keySet()) {
 			double count = churnDetails.get(key) / totalRevs;
-			if (count > 3)
+			if (count > 0.003)
 				result.put(key, count);
 		}
-		Visualization.saveGraph(result, "/Users/nmtiwari/Desktop/Churn.html");
+		Visualization.saveGraph(result, args[1] + "_" + churn.url.substring(churn.url.lastIndexOf('/') + 1) + ".html");
 		System.out.println("Time: " + (endTime - startTime) / 1000.000);
-	}
-
-	/*
-	 * Counts number of lines in file
-	 */
-	public static int countLines(String content) {
-		String[] lines = content.split("\r\n|\r|\n");
-		return lines.length;
-	}
-
-	/*
-	 * A function to check all the number of lines changed in the file
-	 */
-	private HashMap<String, Integer> countNumberOfLinesChange(SVNLogEntryPath file, long newId, long oldId,
-			SVNLogEntry entry, HashMap<String, Integer> churnDetail) {
-		int numOfNullCheckAdds = 0;
-		int changes = 0;
-		String filePath = file.getPath();
-		ByteArrayOutputStream os = new ByteArrayOutputStream();
-
-		if (file.getType() == SVNLogEntryPath.TYPE_DELETED) {
-			String content = this.svn.getFileContent(filePath, oldId, new SVNProperties(), os);
-			changes = countLines(content);
-			fillDetail(filePath, changes, churnDetail);
-		} else if (file.getType() == SVNLogEntryPath.TYPE_ADDED) {
-			String newContent = this.svn.getFileContent(filePath, newId, new SVNProperties(), os);
-			changes = countLines(newContent);
-			fillDetail(filePath, changes, churnDetail);
-		} else if (file.getType() == SVNLogEntryPath.TYPE_MODIFIED) {
-			String oldContent = this.svn.getFileContent(filePath, oldId, new SVNProperties(), os);
-			String newContent = this.svn.getFileContent(filePath, newId, new SVNProperties(),
-					new ByteArrayOutputStream());
-			int difference = countLines(oldContent) - countLines(newContent);
-			changes = difference > 0 ? difference : -1 * difference;
-			fillDetail(filePath, changes, churnDetail);
-		}
-		return churnDetail;
-	}
-
-	/*
-	 * A function for adding data in map
-	 */
-	private HashMap<String, Integer> fillDetail(String key, int value, HashMap<String, Integer> map) {
-		if (map.containsKey(key)) {
-			map.put(key, map.get(key) + value);
-		} else {
-			map.put(key, value);
-		}
-		return map;
 	}
 
 }
