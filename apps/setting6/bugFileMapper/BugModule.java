@@ -74,11 +74,6 @@ public class BugModule {
 		return reader.readLine();
 	}
 
-	/*
-	 * @issues: List of all github issues
-	 * 
-	 * @id: integer returns if id is actual bug id or not
-	 */
 	private boolean isBug(List<Issue> issues, int id) {
 		for (Issue issue : issues) {
 			if (id == issue.getNumber()) {
@@ -88,12 +83,6 @@ public class BugModule {
 		return false;
 	}
 
-	/*
-	 * @log: commit message
-	 * 
-	 * @issues: list of all issues returns a list of integers representing issue
-	 * numbers. This method gives you actual issue numbers.
-	 */
 	public List<Integer> getIssueIDsFromCommitLog(String log, List<Issue> issues) {
 		List<Integer> ids = getIdsFromCommitMsg(log);
 		List<Integer> bugs = new ArrayList<>();
@@ -105,10 +94,6 @@ public class BugModule {
 		return bugs;
 	}
 
-	/*
-	 * A simple method which fetches all the numbers from the string. Note: It
-	 * does not verify if the numbers are real bug ids or not.
-	 */
 	public List<Integer> getIdsFromCommitMsg(String commitLog) {
 		String commitMsg = commitLog;
 		commitMsg = commitMsg.replaceAll("[^0-9]+", " ");
@@ -119,16 +104,12 @@ public class BugModule {
 				if (!ids.contains(Integer.parseInt(id)))
 					ids.add(Integer.parseInt(id));
 			} catch (NumberFormatException e) {
-				// e.printStackTrace();
+				e.printStackTrace();
 			}
 		}
 		return ids;
 	}
 
-	/*
-	 * A method to get a list of issue numbers. Issue number is different than
-	 * issue id.
-	 */
 	public List<Integer> getIssueNumbers(List<Issue> issues) {
 		List<Integer> ids = new ArrayList<Integer>();
 		for (Issue issue : issues) {
@@ -137,12 +118,6 @@ public class BugModule {
 		return ids;
 	}
 
-	/*
-	 * @msg: COmmit message
-	 * 
-	 * @issues: list of all issues return boolean if this msg contains any real
-	 * bug id or not
-	 */
 	public boolean isFixingRevision(String msg, List<Issue> issues) {
 		if (VCSModule.isFixingRevision(msg)) {
 			List<Integer> ids = getIssueNumbers(issues);

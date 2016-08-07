@@ -9,13 +9,6 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import setting3.bugFileMapper.BugModule;;
-
-/**
- * Created by nmtiwari on 7/20/16. A class for mapping the files with bugs. This
- * class lists all the files along with all the bugs which were related to some
- * change in this files. Note: Class does not check for what the change was but
- * only checks if it was in the same commit, which fixed the bug.
- */
 public class Mining {
 	private VCSModule git;
 	private String userName;

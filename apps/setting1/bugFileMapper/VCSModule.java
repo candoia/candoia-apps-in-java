@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
@@ -17,12 +16,7 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
-/**
- * Created by nmtiwari on 7/9/16. This is class for handling git connections and
- * cloning from repo
- */
 public class VCSModule {
-	// patters to check if fixings
 	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
 	private FileRepositoryBuilder builder;
 	private Repository repository;
@@ -44,10 +38,6 @@ public class VCSModule {
 		return this.repository;
 	}
 
-	/*
-	 * @commitLog: commit message returns boolean Checks if the revision has any
-	 * of the fixing patterns
-	 */
 	public static boolean isFixingRevision(String commitLog) {
 		boolean isFixing = false;
 		Pattern p;
@@ -66,30 +56,20 @@ public class VCSModule {
 		return isFixing;
 	}
 
-	/*
-	 * A function to get all the revisions of the repository
-	 */
 	public ArrayList<RevCommit> getAllRevisions() {
 		ArrayList<RevCommit> revisions = new ArrayList<>();
-
 		Iterable<RevCommit> allRevisions = null;
 		try {
 			allRevisions = git.log().call();
 		} catch (GitAPIException e) {
 			e.printStackTrace();
 		}
-
 		for (RevCommit rev : allRevisions) {
 			revisions.add(rev);
 		}
 		return revisions;
 	}
 
-	/*
-	 * @repository: Git repository
-	 * @commit: revision id Returns list of file paths from this revision of
-	 * given repository
-	 */
 	public List<String> readElementsAt(Repository repository, String commit) throws IOException {
 		RevWalk revWalk = new RevWalk(repository);
 		RevCommit revCommit = revWalk.parseCommit(ObjectId.fromString(commit));
@@ -99,7 +79,6 @@ public class VCSModule {
 		treeWalk.addTree(tree);
 		treeWalk.setRecursive(true);
 		treeWalk.setPostOrderTraversal(true);
-
 		while (treeWalk.next()) {
 			items.add(treeWalk.getPathString());
 		}
