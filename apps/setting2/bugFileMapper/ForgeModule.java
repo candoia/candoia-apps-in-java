@@ -1,10 +1,6 @@
 package setting2.bugFileMapper;
 
-import java.io.BufferedReader;
-import java.io.Console;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
 
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
@@ -16,19 +12,10 @@ import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNUpdateClient;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
-import br.ufpe.cin.groundhog.Project;
-import br.ufpe.cin.groundhog.User;
-
 /**
  * Created by nmtiwari on 7/9/16.
  */
 public class ForgeModule {
-	private static char[] pwd = null;
-	public static String oaToken = null;
-
-	private static class Lock {
-	}
-
 	public static void clone(String URL, String repoPath) throws SVNException {
 		SVNURL svnurl = SVNURL.parseURIDecoded(URL);
 		SVNRepository srcRepository = SVNRepositoryFactory.create(svnurl);

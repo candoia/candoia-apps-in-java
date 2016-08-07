@@ -6,13 +6,6 @@ import java.util.List;
 
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.io.SVNRepository;
-
-/**
- * Created by nmtiwari on 7/20/16. A class for mapping the files with bugs. This
- * class lists all the files along with all the bugs which were related to some
- * change in this files. Note: Class does not check for what the change was but
- * only checks if it was in the same commit, which fixed the bug.
- */
 public class Mining {
 	private VCSModule svn;
 	private String userName;
@@ -21,9 +14,6 @@ public class Mining {
 	private String bugURL;
 	private String product;
 
-	/*
-	 * url must be of form: username@url
-	 */
 	public Mining(String url, String path, String bug_url) {
 		this.userName = url.substring(0, url.indexOf('@'));
 		url = url.substring(url.indexOf('@') + 1);
@@ -38,9 +28,6 @@ public class Mining {
 		this.product = bug_url.substring(0, bug_url.indexOf('@'));
 	}
 
-	/*
-	 * Main function for FileAssociation Mining
-	 */
 	public static void main(String[] args) {
 		long startTime = System.currentTimeMillis();
 		int index = 0;
@@ -52,28 +39,22 @@ public class Mining {
 			bugsrcMapper = new Mining("nmtiwari@/Users/nmtiwari/Desktop/test/pagal/panini/",
 					"/Users/nmtiwari/Desktop/test/pagal/panini/svn", "Tomcat 8@https://bz.apache.org/bugzilla");
 		}
-		// get all the revisions of the project
 		ArrayList<SVNCommit> revisions = bugsrcMapper.svn.getAllRevisions();
 		int totalRevs = revisions.size();
-		// get all the issues of the projects.
 		BugModule bugs = new BugModule();
 		List<b4j.core.Issue> issues = new ArrayList<>();
 		System.out.println(bugsrcMapper.bugURL + "\n" + bugsrcMapper.product);
 		try {
 			issues = bugs.importBugs(bugsrcMapper.bugURL, bugsrcMapper.product);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 		SVNRepository repository = bugsrcMapper.svn.getRepository();
 
-		// check all the revisions
 		for (int i = 0; i < totalRevs; i++) {
 			SVNCommit revision = revisions.get(i);
-			// check if the revision is bug fixing revision or a simple revision
 			if (bugs.isFixingRevision(revision.getMessage(), issues)) {
-				// get all the files of the revisions
 				List<String> files = revision.getFiles();
 				for (String name : files) {
 					List<Integer> bugIds = bugs.getIssueIDsFromCommitLog(revision.getMessage(), issues);
@@ -92,7 +73,6 @@ public class Mining {
 
 		}
 
-		// print all the values
 		System.out.println(issues.toString());
 		HashMap<String, Integer> bugCounter = new HashMap<>();
 		System.out.println("Total buggy files: " + bugsrcMapper.fileBugIndex.size());

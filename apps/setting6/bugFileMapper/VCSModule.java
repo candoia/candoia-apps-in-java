@@ -44,8 +44,6 @@ public class VCSModule {
 	private Repository repository;
 	private Git git;
 	private String path;
-	// private String userName;
-	// private String projName;
 
 	public VCSModule(String path) {
 		this.builder = new FileRepositoryBuilder();
@@ -58,25 +56,7 @@ public class VCSModule {
 		}
 	}
 
-	// clone the repository from remote at given local path
-	public static boolean cloneRepo(String URL, String repoPath) {
-		// String url = URL.substring(URL.indexOf('@') + 1, URL.length()) +
-		// ".git";
-		try {
-			ForgeModule.clone(URL, repoPath);
-		} catch (IOException | GitAPIException e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
 
-	public Repository getRepository() {
-		return this.repository;
-	}
-
-	/*
-	 * A function to get all the revisions of the repository
-	 */
 	public ArrayList<RevCommit> getAllRevisions() {
 		ArrayList<RevCommit> revisions = new ArrayList<>();
 
@@ -92,43 +72,41 @@ public class VCSModule {
 		}
 		return revisions;
 	}
-
-	/*
-	 * @repository: Git repository
-	 * @commit: revision id
-	 * Returns list of file paths from this revision of given repository
-	 */
 	public List<String> readElementsAt(Repository repository, String commit) throws IOException {
-		RevCommit revCommit = buildRevCommit(repository, commit);
-
-		// and using commit's tree find the path
+		RevWalk revWalk = new RevWalk(repository);
+		RevCommit revCommit = revWalk.parseCommit(ObjectId.fromString(commit));
 		RevTree tree = revCommit.getTree();
-		// System.out.println("Having tree: " + tree + " for commit " + commit);
-
 		List<String> items = new ArrayList<>();
-
-		// shortcut for root-path
 		TreeWalk treeWalk = new TreeWalk(repository);
 		treeWalk.addTree(tree);
 		treeWalk.setRecursive(true);
 		treeWalk.setPostOrderTraversal(true);
-
 		while (treeWalk.next()) {
 			items.add(treeWalk.getPathString());
 		}
 		return items;
 	}
 
-	/*
-	 * @repository: Git Repository
-	 * @commit: Revsion id
-	 * returns a revision commit version of the revision id
-	 */
-	public RevCommit buildRevCommit(Repository repository, String commit) throws IOException {
-		// a RevWalk allows to walk over commits based on some filtering that is
-		// defined
-		RevWalk revWalk = new RevWalk(repository);
-		return revWalk.parseCommit(ObjectId.fromString(commit));
+	public static boolean isFixingRevision(String commitLog) {
+		boolean isFixing = false;
+		Pattern p;
+		if (commitLog != null) {
+			String tmpLog = commitLog.toLowerCase();
+			for (int i = 0; i < fixingPatterns.length; i++) {
+				String patternStr = fixingPatterns[i];
+				p = Pattern.compile(patternStr);
+				Matcher m = p.matcher(tmpLog);
+				isFixing = m.find();
+				if (isFixing) {
+					break;
+				}
+			}
+		}
+		return isFixing;
 	}
 
+
+	public Repository getRepository() {
+	  return this.repository;
+	}
 }

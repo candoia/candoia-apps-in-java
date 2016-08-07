@@ -42,7 +42,7 @@ public class SearchIssues {
         while (true) {
             String searchUrl = builder.withParam("https://api.github.com/repos")
                     .withSimpleParam("/", project.getOwner().getLogin()).withSimpleParam("/", project.getName())
-                    .withParam("/issues").withParam("?state=all&").withParam("page=" + pageNumber).build();
+                    .withParam("/issues").withParam("?state=all&").withParam("page=" + pageNumber).sbuild();
             String jsonString = requests.get(searchUrl);
             List<IssueLabel> lables = new ArrayList<IssueLabel>();
             if (!jsonString.equals("[]") && !jsonString.contains("\"message\":\"API rate limit exceeded for") && !jsonString.contains("bad credentials")) {

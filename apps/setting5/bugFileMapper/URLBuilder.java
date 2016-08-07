@@ -142,23 +142,6 @@ public final class URLBuilder {
      *
      * @return final url
      */
-    public String build() {
-        if(this.builder == null)
-            throw new UnsupportedOperationException("No parameter URL has been sent!");
-        String concat = isFirstParam() ? "?" : "&";
-        if(ForgeModule.oaToken == null){
-            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-            System.out.println("Please provide your authentication token: ");
-                this.oauthToken = new String(ForgeModule.readPassword());
-                ForgeModule.oaToken = this.oauthToken;
-        }else{
-            this.oauthToken = ForgeModule.oaToken;
-        }
-        String result = this.builder.append(concat).append(oauthToken).toString();
-        this.builder.delete(0, result.length());
-        return result;
-    }
-
     public String sbuild() {
         if(this.builder == null)
             throw new UnsupportedOperationException("Nenhum parametro de URL foi enviado!");

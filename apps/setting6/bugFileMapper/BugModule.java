@@ -44,13 +44,6 @@ public class BugModule {
 		this.builder = Guice.createInjector(new HttpModule()).getInstance(URLBuilder.class);
 	}
 
-	/*
-	 * This method reads the user password using java.util.Console service. In
-	 * some IDE's like eclipse this service is not available and creation of
-	 * console form the IDE always return null. In that very case password is
-	 * read using normal BufferedReader and input is visible as the user types
-	 * in. This is not bug but a feature not supported in some IDEs.
-	 */
 	public static char[] readPassword() {
 		char[] pwd = null;
 		if (pwd != null) {
