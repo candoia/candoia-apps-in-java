@@ -1,5 +1,4 @@
 package setting4.methodCallFrequency;
-
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import java.io.BufferedReader;
