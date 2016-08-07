@@ -1,5 +1,6 @@
 package setting5.churnRate;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -11,7 +12,7 @@ import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
 
-import settging1.churnRate.Visualization;
+import setting1.churnRate.Visualization;
 
 /**
  * Created by nmtiwari on 7/24/16.
@@ -19,6 +20,7 @@ import settging1.churnRate.Visualization;
 public class Mining {
 	private VCSModule svn;
 	public String url;
+
 	private Mining(String repoPath) {
 		this.svn = new VCSModule(repoPath);
 	}
@@ -29,11 +31,14 @@ public class Mining {
 	private Mining(String url, String path) {
 		this.url = url;
 		url = url.substring(url.indexOf('@') + 1);
-		try {
-			ForgeModule.clone(url, path);
-		} catch (SVNException e) {
-			e.printStackTrace();
+		if (!new File(path).isDirectory()) {
+			try {
+				ForgeModule.clone(url, path);
+			} catch (SVNException e) {
+				e.printStackTrace();
+			}
 		}
+
 		this.svn = new VCSModule(path);
 	}
 
@@ -80,13 +85,10 @@ public class Mining {
 					Map<String, SVNLogEntryPath> changedPaths = entry.getChangedPaths();
 					for (String str : changedPaths.keySet()) {
 						SVNLogEntryPath path = changedPaths.get(str);
-
-						if (path.getType() == SVNLogEntryPath.TYPE_REPLACED) {
-							churnDetails.put(path.getCopyPath(), churnDetails.get(path.getPath() + 1));
-						} else if (path.getType() == SVNLogEntryPath.TYPE_ADDED) {
+						if (churnDetails.containsKey(path.getPath())) {
+							churnDetails.put(path.getPath(), churnDetails.get(path.getPath()) + 1);
+						} else {
 							churnDetails.put(path.getPath(), 1);
-						} else if (path.getType() == SVNLogEntryPath.TYPE_MODIFIED) {
-							churnDetails.put(path.getPath(), churnDetails.get(path.getPath() + 1));
 						}
 					}
 
@@ -99,7 +101,7 @@ public class Mining {
 		HashMap<String, Double> result = new HashMap<>();
 		for (String key : churnDetails.keySet()) {
 			double count = churnDetails.get(key) / totalRevs;
-			if (count > 0.003)
+			if (count > 0.05)
 				result.put(key, count);
 		}
 		Visualization.saveGraph(result, args[1] + "_" + churn.url.substring(churn.url.lastIndexOf('/') + 1) + ".html");

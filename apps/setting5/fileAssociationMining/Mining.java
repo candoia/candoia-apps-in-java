@@ -1,4 +1,4 @@
-package setting2.fileAssocaition;
+package setting5.fileAssociationMining;
 
 import java.io.BufferedWriter;
 import java.io.File;
