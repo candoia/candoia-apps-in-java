@@ -27,7 +27,6 @@ public class BugModule{
 	}
 
 	public final List<Issue> importJiraIssues() {
-		// system.out.println("url in importbugs:"+url);
 		List<Issue> issues = new ArrayList<>();
 		AbstractHttpSession session = new JiraRpcSession();
 		try {
@@ -38,9 +37,6 @@ public class BugModule{
 				DefaultSearchData searchData = new DefaultSearchData();
 				searchData.add("jql", "project = " + product);
 				searchData.add("limit", "0");
-				// searchData.add("jql", "project = HADOOP COMMON AND issuetype
-				// = Bug AND status in (Resolved, Closed) AND resolution =
-				// Fixed");
 				searchData.add("issuetype", "bug");
 				searchData.add("status", "Resolved");
 				Iterator i = session.searchBugs(searchData, null).iterator();
@@ -55,8 +51,6 @@ public class BugModule{
 						System.out.println("Exception found in issue : " + issue.getId());
 					}
 				}
-
-				// system.out.println("Total issues : " + issues.size());
 				session.close();
 			}
 
@@ -74,12 +68,6 @@ public class BugModule{
 		jira.importJiraIssues();
 	}
 
-	/*
-	 * @log: commit message
-	 * @issues: list of all issues
-	 * returns a list of integers representing issue numbers.
-	 * This method gives you actual issue numbers.
-	 */
 	public List<Integer> getIssueIDsFromCommitLog(String log, List<b4j.core.Issue> issues) {
 		List<Integer> ids = getIdsFromCommitMsg(log);
 		List<Integer> bugs = new ArrayList<>();
@@ -91,11 +79,6 @@ public class BugModule{
 		return bugs; 
 	}
 	
-	/*
-	 * @issues: List of all github issues
-	 * @id: integer
-	 * returns if id is actual bug id or not
-	 */
 	private boolean isBug(List<b4j.core.Issue> issues, int id) {
 		for (Issue issue : issues) {
 			if ((id+"").equals(issue.getId())) {
@@ -105,9 +88,6 @@ public class BugModule{
 		return false;
 	}
 	
-	/*
-	 * A method to get a list of issue numbers. Issue number is different than issue id.
-     */
 	public List<String> getIssueNumbers(List<b4j.core.Issue> issues) {
 		List<String> ids = new ArrayList<String>();
 		for (b4j.core.Issue issue : issues) {
@@ -116,10 +96,6 @@ public class BugModule{
 		return ids;
 	}
 	
-	/*
-	 * A simple method which fetches all the numbers from the string.
-	 * Note: It does not verify if the numbers are real bug ids or not.
-	 */
 	public List<Integer> getIdsFromCommitMsg(String commitLog) {
 		String commitMsg = commitLog;
 		commitMsg = commitMsg.replaceAll("[^0-9]+", " ");
@@ -136,11 +112,6 @@ public class BugModule{
 		return ids;
 	}
 	
-	/*
-	 * @msg: COmmit message
-	 * @issues: list of all issues
-	 * return boolean if this msg contains any real bug id or not
-	 */
 	public boolean isFixingRevision(String msg, List<b4j.core.Issue> issues) {
 		if (isFixingRevision(msg)) {
 			List<String> ids = getIssueNumbers(issues);
@@ -154,11 +125,6 @@ public class BugModule{
 		return false;
 	}
 	
-	/*
-	 * @commitLog: commit message
-	 * returns boolean
-	 * Checks if the revision has any of the fixing patterns
-	 */
 	public boolean isFixingRevision(String commitLog) {
 		boolean isFixing = false;
 		Pattern p;

@@ -1,20 +1,22 @@
 package setting4.nullCheck;
 
-import br.ufpe.cin.groundhog.Issue;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
-import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.ConditionalExpression;
+import org.eclipse.jdt.core.dom.IfStatement;
+import org.eclipse.jdt.core.dom.InfixExpression;
+import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
-
-import com.sun.jna.platform.unix.X11.Visual;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * Created by nmtiwari on 7/9/16. A class to check all the Null Checks in the
@@ -43,7 +45,18 @@ public class Mining {
 		this.userName = url.substring(0, url.indexOf('@'));
 		url = url.substring(url.indexOf('@') + 1);
 		this.projName = url.substring(url.lastIndexOf('/') + 1);
-		VCSModule.cloneRepo(url, path);
+		if (new File(path).isDirectory()) {
+			try {
+				ForgeModule.clone(url, path);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (GitAPIException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
 		this.git = new VCSModule(path);
 		this.bugURL = bug_url.substring(bug_url.indexOf('@') + 1);
 		this.product = bug_url.substring(0, bug_url.indexOf('@'));
