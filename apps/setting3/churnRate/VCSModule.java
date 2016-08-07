@@ -50,18 +50,6 @@ public class VCSModule {
 		}
 	}
 
-	// clone the repository from remote at given local path
-	public static boolean cloneRepo(String URL, String repoPath) {
-		// String url = URL.substring(URL.indexOf('@') + 1, URL.length()) +
-		// ".git";
-		try {
-			ForgeModule.clone(URL, repoPath);
-		} catch (IOException | GitAPIException e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-
 	public Repository getRepository() {
 		return this.repository;
 	}

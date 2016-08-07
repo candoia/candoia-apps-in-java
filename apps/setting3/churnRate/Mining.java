@@ -23,8 +23,15 @@ public class Mining {
 	private Mining(String url, String path) {
 		this.url = url;
 		url = url.substring(url.indexOf('@') + 1);
-		if (!new File(path).isDirectory())
-			VCSModule.cloneRepo(url, path);
+		if (!new File(path).isDirectory()) {
+			try {
+				ForgeModule.clone(url, path);
+			} catch (IOException | GitAPIException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
 		this.git = new VCSModule(path);
 	}
 
@@ -70,10 +77,10 @@ public class Mining {
 						churnDetails.put(diff.getNewPath(), 1);
 					} else if (diff.getChangeType() == DiffEntry.ChangeType.RENAME) {
 						churnDetails.put(diff.getNewPath(), churnDetails.get(diff.getOldPath() + 1));
-//						churnDetails.put(diff.getOldPath(), 0);
+						// churnDetails.put(diff.getOldPath(), 0);
 					} else {
 						String oldPath = diff.getOldPath();
-						if(churnDetails.containsKey(oldPath))
+						if (churnDetails.containsKey(oldPath))
 							churnDetails.put(diff.getOldPath(), churnDetails.get(oldPath) + 1);
 						else
 							churnDetails.put(diff.getOldPath(), 1);
@@ -81,11 +88,10 @@ public class Mining {
 
 				}
 			} catch (RevisionSyntaxException | IOException | GitAPIException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-		
+
 		long endTime = System.currentTimeMillis();
 		HashMap<String, Double> result = new HashMap<>();
 		for (String key : churnDetails.keySet()) {
@@ -95,18 +101,6 @@ public class Mining {
 		}
 		Visualization.saveGraph(result, args[1] + "_" + churn.url.substring(churn.url.lastIndexOf('/') + 1) + ".html");
 		System.out.println("Time: " + (endTime - startTime) / 1000.000);
-	}
-
-	/*
-	 * A function for adding data in map
-	 */
-	private HashMap<String, Integer> fillDetail(String key, int value, HashMap<String, Integer> map) {
-		if (map.containsKey(key)) {
-			map.put(key, map.get(key) + value);
-		} else {
-			map.put(key, value);
-		}
-		return map;
 	}
 
 }

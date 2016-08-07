@@ -1,4 +1,4 @@
-package settging1.bugFileMapper;
+package setting1.bugFileMapper;
 
 import java.util.ArrayList;
 import java.util.List;
