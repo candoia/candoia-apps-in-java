@@ -5,10 +5,6 @@ import java.io.IOException;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import br.ufpe.cin.groundhog.Project;
-
-/**
- * Created by nmtiwari on 7/9/16.
- */
 public class ForgeModule {
 	private Project project;
 	private static char[] pwd = null;

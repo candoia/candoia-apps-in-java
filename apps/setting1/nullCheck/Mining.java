@@ -1,6 +1,8 @@
 package setting1.nullCheck;
 
 import br.ufpe.cin.groundhog.Issue;
+import setting1.bugFileMapper.BugModule;
+
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
@@ -59,7 +61,8 @@ public class Mining {
         ArrayList<RevCommit> revisions = nullCheck.git.getAllRevisions();
         ArrayList<RevCommit> nullFixingRevs = new ArrayList<RevCommit>();
         ArrayList<RevCommit> fixingRevs = new ArrayList<RevCommit>();
-        List<Issue> issues = nullCheck.git.getIssues(nullCheck.userName, nullCheck.projName);
+        BugModule bugIds = new BugModule(nullCheck.userName, nullCheck.projName);
+		List<Issue> issues = bugIds.getIssues();
         int totalRevs = revisions.size();
         System.out.println("Revisions and Issues: " + totalRevs + " " + issues.size());
 
@@ -93,7 +96,7 @@ public class Mining {
                 	fixingRevs.add(revisionNew);
                 } 
                 for (DiffEntry diff : diffs) {
-                    	if(nullCheck.git.isFixingRevision(commitMsg, issues)){
+                    	if(bugIds.isFixingRevision(commitMsg, issues)){
                           // count the added null checks.
                             int count = nullCheck.countNullCheckAdditions(revisionNew.getId(), revisionOld.getId(), diff);
                             if (count > 0) {

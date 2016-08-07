@@ -137,40 +137,6 @@ public final class URLBuilder {
         throw new UnsupportedOperationException("Sorry. Not implemented yet.");
     }
 
-    /**
-     * Return the url as a string
-     *
-     * @return final url
-     */
-    public String build() {
-        if(this.builder == null)
-            throw new UnsupportedOperationException("No parameter URL has been sent!");
-        String concat = isFirstParam() ? "?" : "&";
-        if(ForgeModule.oaToken == null){
-            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-            System.out.println("Please provide your authentication token: ");
-//            try {
-//                this.oauthToken = br.readLine();
-//                Github.oaToken = this.oauthToken;
-//            } catch (java.io.IOException ioe) {
-//            }finally{
-//                try {
-//                    br.close();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-            
-                this.oauthToken = new String(ForgeModule.readPassword());
-                ForgeModule.oaToken = this.oauthToken;
-        }else{
-            this.oauthToken = ForgeModule.oaToken;
-        }
-        String result = this.builder.append(concat).append(oauthToken).toString();
-        this.builder.delete(0, result.length());
-        return result;
-    }
-
     public String sbuild() {
         if(this.builder == null)
             throw new UnsupportedOperationException("Nenhum parametro de URL foi enviado!");

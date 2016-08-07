@@ -1,28 +1,15 @@
 package setting2.churnRate;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
 import org.tmatesoft.svn.core.SVNNodeKind;
-import org.tmatesoft.svn.core.SVNProperties;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
 import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory;
@@ -33,21 +20,12 @@ import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
-import br.ufpe.cin.groundhog.http.Requests;
-
-/**
- * @author hoan
- * @author rdyer
- */
 public class VCSModule {
 	protected ArrayList<SVNCommit> revisions = new ArrayList<SVNCommit>();
 	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
 	static {
-		// For using over http:// and https://
 		DAVRepositoryFactory.setup();
-		// For using over svn:// and svn+xxx://
 		SVNRepositoryFactoryImpl.setup();
-		// For using over file:///
 		FSRepositoryFactory.setup();
 	}
 
@@ -70,10 +48,7 @@ public class VCSModule {
 		this.repository = null;
 	}
 
-	// clone the repository from remote at given local path
 	public static boolean cloneRepo(String URL, String repoPath) {
-		// String url = URL.substring(URL.indexOf('@') + 1, URL.length()) +
-		// ".git";
 		try {
 			ForgeModule.clone(URL, repoPath);
 		} catch (SVNException e) {
@@ -194,8 +169,6 @@ public class VCSModule {
 			for (Iterator entries = logEntries.iterator(); entries.hasNext();) {
 				SVNLogEntry logEntry = (SVNLogEntry) entries.next();
 				result.add(logEntry);
-				// System.out.println(String.format("revision: %d, date %s",
-				// logEntry.getRevision(), logEntry.getDate()));
 			}
 			return result;
 		} catch (Exception e) {

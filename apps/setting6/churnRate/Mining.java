@@ -17,9 +17,6 @@ public class Mining {
 	private VCSModule git;
 	public String url;
 
-	/*
-	 * url must be of form: username@url
-	 */
 	private Mining(String url, String path) {
 		this.url = url;
 		url = url.substring(url.indexOf('@') + 1);
@@ -35,13 +32,9 @@ public class Mining {
 		this.git = new VCSModule(path);
 	}
 
-	/*
-	 * Main function for churn rate
-	 */
 	public static void main(String[] args) {
 		long startTime = System.currentTimeMillis();
 		Mining churn = null;
-		// path of the repository
 		if (args.length == 2) {
 			churn = new Mining(args[0], args[1]);
 		} else {
@@ -50,34 +43,17 @@ public class Mining {
 
 		ArrayList<RevCommit> revisions = churn.git.getAllRevisions();
 		double totalRevs = revisions.size();
-
-		/*
-		 * From here the repository should comare each commit with its previous
-		 * commit to get the diffs and then find out if some null check was
-		 * added or not.
-		 */
-
-		/*
-		 * Because there are no previous commit for inital commit. We can safely
-		 * avoid the analysis of initial commit.
-		 */
-
-		/*
-		 * A loop for comparing all the commits with its previous commit.
-		 */
 		HashMap<String, Integer> churnDetails = new HashMap<>();
 		for (int i = (int) (totalRevs - 1); i > 0; i--) {
 			RevCommit revisionOld = revisions.get(i);
 			RevCommit revisionNew = revisions.get(i - 1);
 			try {
-				// get all the diffs of this commit from previous commit.
 				List<DiffEntry> diffs = churn.git.diffsBetweenTwoRevAndChangeTypes(revisionNew, revisionOld);
 				for (DiffEntry diff : diffs) {
 					if (diff.getChangeType() == DiffEntry.ChangeType.ADD) {
 						churnDetails.put(diff.getNewPath(), 1);
 					} else if (diff.getChangeType() == DiffEntry.ChangeType.RENAME) {
 						churnDetails.put(diff.getNewPath(), churnDetails.get(diff.getOldPath() + 1));
-						// churnDetails.put(diff.getOldPath(), 0);
 					} else {
 						String oldPath = diff.getOldPath();
 						if (churnDetails.containsKey(oldPath))

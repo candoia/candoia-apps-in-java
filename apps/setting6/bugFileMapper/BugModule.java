@@ -1,4 +1,4 @@
-package setting1.bugFileMapper;
+package setting6.bugFileMapper;
 
 import java.io.BufferedReader;
 import java.io.Console;
@@ -7,27 +7,38 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 import br.ufpe.cin.groundhog.Issue;
 import br.ufpe.cin.groundhog.IssueLabel;
 import br.ufpe.cin.groundhog.Project;
 import br.ufpe.cin.groundhog.User;
 import br.ufpe.cin.groundhog.http.HttpModule;
 import br.ufpe.cin.groundhog.http.Requests;
+import br.ufpe.cin.groundhog.search.SearchModule;
 
 public class BugModule {
+	private List<Issue> _issues;
 	private Project project;
+	private String user;
+	private String proj;
 	private final Gson gson;
 	private final URLBuilder builder;
 	private final Requests requests;
 
 	public BugModule(String username, String projName) {
+		Injector injector = Guice.createInjector(new SearchModule());
+		this._issues = new ArrayList<>();
 		User user = new User(username);
 		this.project = new Project(user, projName);
 		this.project = new Project(user, projName);
+		this.user = username;
+		this.proj = projName;
 		this.requests = new Requests();
 		this.gson = new Gson();
 		this.builder = Guice.createInjector(new HttpModule()).getInstance(URLBuilder.class);
@@ -62,6 +73,7 @@ public class BugModule {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		return reader.readLine();
 	}
+
 	private boolean isBug(List<Issue> issues, int id) {
 		for (Issue issue : issues) {
 			if (id == issue.getNumber()) {
@@ -70,6 +82,7 @@ public class BugModule {
 		}
 		return false;
 	}
+
 	public List<Integer> getIssueIDsFromCommitLog(String log, List<Issue> issues) {
 		List<Integer> ids = getIdsFromCommitMsg(log);
 		List<Integer> bugs = new ArrayList<>();
@@ -91,11 +104,12 @@ public class BugModule {
 				if (!ids.contains(Integer.parseInt(id)))
 					ids.add(Integer.parseInt(id));
 			} catch (NumberFormatException e) {
-				 e.printStackTrace();
+				e.printStackTrace();
 			}
 		}
 		return ids;
 	}
+
 	public List<Integer> getIssueNumbers(List<Issue> issues) {
 		List<Integer> ids = new ArrayList<Integer>();
 		for (Issue issue : issues) {

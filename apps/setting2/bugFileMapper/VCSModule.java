@@ -19,67 +19,33 @@ import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
-
-/**
- * @author hoan
- * @author rdyer
- */
 public class VCSModule {
 	protected ArrayList<SVNCommit> revisions = new ArrayList<SVNCommit>();
 	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
 	static {
-		// For using over http:// and https://
 		DAVRepositoryFactory.setup();
-		// For using over svn:// and svn+xxx://
 		SVNRepositoryFactoryImpl.setup();
-		// For using over file:///
 		FSRepositoryFactory.setup();
 	}
 
 	private SVNRepository repository = null;
 	private SVNURL url;
-
 	private ISVNAuthenticationManager authManager;
 	private SVNClientManager clientManager = null;
-
 	private long lastSeenRevision = 1l;
 	private long latestRevision = 0l;
 
 	public VCSModule(final String url) {
-		this(url, "", "");
-	}
-
-	public VCSModule() {
-		this.url = null;
-		this.authManager = null;
-		this.repository = null;
-	}
-
-	// clone the repository from remote at given local path
-	public static boolean cloneRepo(String URL, String repoPath) {
-		// String url = URL.substring(URL.indexOf('@') + 1, URL.length()) +
-		// ".git";
-		try {
-			ForgeModule.clone(URL, repoPath);
-		} catch (SVNException e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-
-	public VCSModule(final String url, final String username, final String password) {
 		try {
 			this.url = SVNURL.fromFile(new File(url));
-
-			this.authManager = SVNWCUtil.createDefaultAuthenticationManager(username, password);
-
+			this.authManager = SVNWCUtil.createDefaultAuthenticationManager("", "");
 			this.repository = SVNRepositoryFactory.create(this.url);
 			this.repository.setAuthenticationManager(this.authManager);
-
 			this.latestRevision = this.repository.getLatestRevision();
 		} catch (final SVNException e) {
 			e.printStackTrace();
 		}
+
 	}
 
 	public ArrayList<SVNCommit> getAllRevisions() {
@@ -92,7 +58,6 @@ public class VCSModule {
 
 			for (final SVNLogEntry logEntry : logEntries) {
 				final SVNCommit revision = new SVNCommit(repository, this, logEntry);
-
 				revision.setId("" + logEntry.getRevision());
 				if (logEntry.getAuthor() == null)
 					revision.setCommitter(logEntry.getAuthor());
@@ -122,7 +87,6 @@ public class VCSModule {
 					revision.setRemovedPaths(rRemovedPaths);
 					revision.setAddedPaths(rAddedPaths);
 				}
-
 				this.revisions.add(revision);
 			}
 		} catch (final SVNException e) {

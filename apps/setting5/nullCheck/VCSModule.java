@@ -43,11 +43,8 @@ public class VCSModule {
 	protected ArrayList<SVNCommit> revisions = new ArrayList<SVNCommit>();
 	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
 	static {
-		// For using over http:// and https://
 		DAVRepositoryFactory.setup();
-		// For using over svn:// and svn+xxx://
 		SVNRepositoryFactoryImpl.setup();
-		// For using over file:///
 		FSRepositoryFactory.setup();
 	}
 
@@ -61,73 +58,15 @@ public class VCSModule {
 	private long latestRevision = 0l;
 
 	public VCSModule(final String url) {
-		this(url, "", "");
-	}
-
-	public VCSModule() {
-		this.url = null;
-		this.authManager = null;
-		this.repository = null;
-	}
-
-	// clone the repository from remote at given local path
-	public static boolean cloneRepo(String URL, String repoPath) {
-		// String url = URL.substring(URL.indexOf('@') + 1, URL.length()) +
-		// ".git";
-		try {
-			ForgeModule.clone(URL, repoPath);
-		} catch (SVNException e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-
-	public VCSModule(final String url, final String username, final String password) {
 		try {
 			this.url = SVNURL.fromFile(new File(url));
-
-			this.authManager = SVNWCUtil.createDefaultAuthenticationManager(username, password);
-
-			this.repository = SVNRepositoryFactory.create(this.url);
-			this.repository.setAuthenticationManager(this.authManager);
-
-			this.latestRevision = this.repository.getLatestRevision();
-		} catch (final SVNException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void close() {
-		repository.closeSession();
-	}
-
-	public boolean clear() {
-		this.close();
-		return true;
-	}
-
-	public boolean initialize(String path) {
-		try {
-			this.url = SVNURL.parseURIEncoded("file:///" + path);
 			this.authManager = SVNWCUtil.createDefaultAuthenticationManager("", "");
 			this.repository = SVNRepositoryFactory.create(this.url);
 			this.repository.setAuthenticationManager(this.authManager);
 			this.latestRevision = this.repository.getLatestRevision();
 		} catch (final SVNException e) {
 			e.printStackTrace();
-			return false;
 		}
-		return true;
-	}
-
-	public String getLastCommitId() {
-		if (latestRevision == 0l)
-			return null;
-		return "" + latestRevision;
-	}
-
-	public void setLastSeenCommitId(final String id) {
-		lastSeenRevision = Long.parseLong(id);
 	}
 
 	public ArrayList<SVNCommit> getAllRevisions() {
@@ -179,18 +118,6 @@ public class VCSModule {
 		return revisions;
 	}
 
-	public void getTags(final List<String> names, final List<String> commits) {
-		// TODO
-	}
-
-	public void getBranches(final List<String> names, final List<String> commits) {
-		// TODO
-	}
-
-	/*
-	 * @fileContent: A file content as string returns AST of the content using
-	 * Java JDT.
-	 */
 	public ASTNode createAst(String fileContent) {
 		Map<String, String> options = JavaCore.getOptions();
 		options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
@@ -224,8 +151,6 @@ public class VCSModule {
 			for (Iterator entries = logEntries.iterator(); entries.hasNext();) {
 				SVNLogEntry logEntry = (SVNLogEntry) entries.next();
 				result.add(logEntry);
-				// System.out.println(String.format("revision: %d, date %s",
-				// logEntry.getRevision(), logEntry.getDate()));
 			}
 			return result;
 		} catch (Exception e) {
@@ -245,30 +170,5 @@ public class VCSModule {
 			// e.printStackTrace();
 		}
 		return "";
-	}
-
-	public ArrayList<String> getAllFilesFromHead(ArrayList<String> results) {
-		try {
-			return listEntries(results, "", "");
-			// return listEntries(results, "", this.url.getPath()+"/");
-		} catch (SVNException e) {
-			e.printStackTrace();
-		}
-		return results;
-	}
-
-	private ArrayList<String> listEntries(ArrayList<String> results, String path, String rootPath) throws SVNException {
-		Collection entries = this.repository.getDir(path, -1, new SVNProperties(), (Collection) null);
-		Iterator iterator = entries.iterator();
-		while (iterator.hasNext()) {
-			SVNDirEntry entry = (SVNDirEntry) iterator.next();
-			if (entry.getKind() == SVNNodeKind.FILE) {
-				results.add((path.equals("")) ? rootPath + entry.getName() : rootPath + path + "/" + entry.getName());
-			}
-			if (entry.getKind() == SVNNodeKind.DIR) {
-				listEntries(results, (path.equals("")) ? entry.getName() : path + "/" + entry.getName(), rootPath);
-			}
-		}
-		return results;
 	}
 }

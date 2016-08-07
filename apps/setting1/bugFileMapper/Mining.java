@@ -25,61 +25,41 @@ public class Mining {
 	private String projName;
 	private HashMap<String, List<Integer>> fileBugIndex;
 
-	/*
-	 * url must be of form: username@url
-	 */
 	public Mining(String url, String path) {
 		this.userName = url.substring(0, url.indexOf('@'));
 		url = url.substring(url.indexOf('@') + 1);
 		this.projName = url.substring(url.lastIndexOf('/') + 1);
-		if (!new File(path).isDirectory()){
+		if (!new File(path).isDirectory()) {
 			try {
 				ForgeModule.clone(url, path);
 			} catch (IOException | GitAPIException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+
 		}
 		this.git = new VCSModule(path);
 		this.fileBugIndex = new HashMap<>();
 	}
 
-	/*
-	 * Main function for FileAssociation Mining
-	 */
 	public static void main(String[] args) {
 		long startTime = System.currentTimeMillis();
 		int index = 0;
 		Mining bugsrcMapper = null;
-		// path of the repository
 		if (args.length == 2) {
 			bugsrcMapper = new Mining(args[0], args[1]);
 		}
-		// get all the revisions of the project
 		ArrayList<RevCommit> revisions = bugsrcMapper.git.getAllRevisions();
 		int totalRevs = revisions.size();
-		// get all the issues of the projects.
 		BugModule bugIds = new BugModule(bugsrcMapper.userName, bugsrcMapper.projName);
 		List<Issue> issues = bugIds.getIssues();
-
-		// get the git repository
 		Repository repository = bugsrcMapper.git.getRepository();
-
-		// checl all the revisions
 		for (int i = 0; i < totalRevs; i++) {
 			RevCommit revision = revisions.get(i);
-			// check if the revision is bug fixing revision or a simple revision
 			if (bugIds.isFixingRevision(revision.getFullMessage(), issues)) {
 				try {
-					// get all the files of the revisions
 					List<String> files = bugsrcMapper.git.readElementsAt(repository, revision.getId().getName());
-					// check all the files if they have not been recorded for
-					// this bugs in this commit then record
-					// else you simply ignore this
 					for (String name : files) {
-						List<Integer> bugs = bugIds.getIssueIDsFromCommitLog(revision.getFullMessage(),
-								issues);
+						List<Integer> bugs = bugIds.getIssueIDsFromCommitLog(revision.getFullMessage(), issues);
 						if (!bugsrcMapper.fileBugIndex.containsValue(name)) {
 							bugsrcMapper.fileBugIndex.put(name, bugs);
 						} else {
@@ -98,7 +78,6 @@ public class Mining {
 
 		}
 
-		// print all the values
 		System.out.println(issues.toString());
 		HashMap<String, Integer> bugCounter = new HashMap<>();
 		System.out.println("Total buggy files: " + bugsrcMapper.fileBugIndex.size());
@@ -109,6 +88,6 @@ public class Mining {
 				bugCounter.put(name, count);
 			}
 		}
-		Visualization.saveGraph(bugCounter, args[1]+"/bugSrcMapper_" + bugsrcMapper.projName + ".html");
+		Visualization.saveGraph(bugCounter, args[1] + "/bugSrcMapper_" + bugsrcMapper.projName + ".html");
 	}
 }

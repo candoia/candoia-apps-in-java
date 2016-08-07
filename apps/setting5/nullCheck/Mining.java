@@ -14,6 +14,7 @@ import org.eclipse.jdt.core.dom.ConditionalExpression;
 import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.NullLiteral;
+import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
 import org.tmatesoft.svn.core.SVNProperties;
@@ -29,25 +30,24 @@ public class Mining {
 	private String url;
 	private String product;
 
-	/*
-	 * url must be of form: username@url
-	 */
 	private Mining(String url, String path) {
 		this.url = url;
 		this.userName = url.substring(0, url.indexOf('@'));
 		this.projName = url.substring(url.lastIndexOf('/') + 1);
-		if(!new File(path).isDirectory())
-		  VCSModule.cloneRepo(url.substring(url.indexOf('@') + 1), path);
+		if(!new File(path).isDirectory()){
+			try {
+				ForgeModule.clone(url.substring(url.indexOf('@') + 1), path);
+			} catch (SVNException e) {
+				e.printStackTrace();
+			}
+		}
+		  
 		this.svn = new VCSModule(path);
 	}
 
-	/*
-	 * Main function for NullCheckGit_GIT_Ticket
-	 */
 	public static void main(String[] args) {
 		long startTime = System.currentTimeMillis();
 		Mining nullCheck = null;
-		// path of the repository
 		if (args.length == 2) {
 			nullCheck = new Mining(args[0], args[1]);
 		} else {
@@ -64,37 +64,15 @@ public class Mining {
 		try {
 			issues = bugs.getIssues(nullCheck.projName);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		System.out.println("Revisions and Issues: " + totalRevs + " " + issues.size());
-
-
-
-		/*
-		 * From here the repository should comare each commit with its previous
-		 * commit to get the diffs and then find out if some null check was
-		 * added or not.
-		 */
-
-		/*
-		 * Because there are no previous commit for inital commit. We can safely
-		 * avoid the analysis of initial commit.
-		 */
-
-		/*
-		 * A loop for comparing all the commits with its previous commit.
-		 */
 
 		for (int i = totalRevs - 1; i > 0; i--) {
 			SVNCommit revisionOld = revisions.get(i);
 			SVNCommit revisionNew = revisions.get(i - 1);
 			// get all the diffs of this commit from previous commit.
 			ArrayList<SVNLogEntry> diffs = nullCheck.svn.diffsBetweenTwoRevAndChangeTypes(revisionNew, revisionOld);
-			/*
-			 * A loop for handling all the diffs fro this commit and previous
-			 * commit.
-			 */
 			String commitMsg = revisionNew.getMessage();
 			if (bugs.isFixingRevision(commitMsg)) {
 				fixingRevs.add(revisionNew);
@@ -147,10 +125,6 @@ public class Mining {
 		}
 		return numOfNullCheckAdds;
 	}
-
-	/*
-	 * Reads a file and computes the null checks.
-	 */
 	private int countNullChecks(SVNCommit lastCommitId, String path) throws IOException {
 		String fileContent;
 		try {
@@ -163,9 +137,6 @@ public class Mining {
 		}
 	}
 
-	/*
-	 * Given a AST computes null check
-	 */
 	private int countNullChecks(ASTNode ast) {
 		class NullCheckConditionVisitor extends ASTVisitor {
 			private int numOfNullChecks = 0;
