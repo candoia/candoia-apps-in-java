@@ -31,12 +31,10 @@ public class ForgeModule {
     ForgeModule(String username, String projName) {
         User user = new User(username);
         this.project = new Project(user, projName);
-//        this._commits = new ArrayList<>();
     }
 
     public static boolean clone(String URL, String localpaths)
             throws IOException, GitAPIException {
-//        String url = URL;
         File localPath = new File(localpaths);
         if (!localPath.exists())
             localPath.mkdir();
@@ -46,59 +44,6 @@ public class ForgeModule {
             return true;
         } catch (Exception e) {
             return false;
-        }
-    }
-
-    public static void delete(File folder) {
-        File[] files = folder.listFiles();
-        if (files != null) { //some JVMs return null for empty dirs
-            for (File f : files) {
-                if (f.isDirectory()) {
-                    delete(f);
-                } else {
-                    f.delete();
-                }
-            }
-        }
-        folder.delete();
-    }
-
-    
-    private static String readLine() throws IOException {
-        if (System.console() != null) {
-            return System.console().readLine();
-        }
-        BufferedReader reader = new BufferedReader(new InputStreamReader(
-                System.in));
-        return reader.readLine();
-    } 
-    
-    /*
-     * This method reads the user password using java.util.Console service. In some IDE's like
-     * eclipse this service is not available and creation of console form the IDE always return 
-     * null. In that very case password is read using normal BufferedReader and input is visible
-     * as the user types in. This is not bug but a feature not supported in some IDEs. 
-     */
-    public static char[] readPassword(){
-        synchronized (ForgeModule.Lock.class){
-            if(pwd != null){
-                return pwd;
-            }else{
-                Console cnsl = null;
-                char[] password = null;
-                try {
-                    cnsl = System.console();
-                    if (cnsl != null) {
-                        password = cnsl.readPassword("Password: ");
-                    }else{
-                    	return readLine().toCharArray();
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-                pwd = password;
-                return password;
-            }
         }
     }
 }

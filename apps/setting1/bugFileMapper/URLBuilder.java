@@ -149,7 +149,7 @@ public final class URLBuilder {
         if(ForgeModule.oaToken == null){
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             System.out.println("Please provide your authentication token: ");
-                this.oauthToken = new String(ForgeModule.readPassword());
+                this.oauthToken = new String(BugModule.readPassword());
                 ForgeModule.oaToken = this.oauthToken;
         }else{
             this.oauthToken = ForgeModule.oaToken;

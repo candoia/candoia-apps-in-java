@@ -60,7 +60,8 @@ public class Mining {
 		ArrayList<RevCommit> revisions = bugsrcMapper.git.getAllRevisions();
 		int totalRevs = revisions.size();
 		// get all the issues of the projects.
-		List<Issue> issues = bugsrcMapper.git.getIssues(bugsrcMapper.userName, bugsrcMapper.projName);
+		BugModule bugIds = new BugModule(bugsrcMapper.userName, bugsrcMapper.projName);
+		List<Issue> issues = bugIds.getIssues();
 
 		// get the git repository
 		Repository repository = bugsrcMapper.git.getRepository();
@@ -69,7 +70,7 @@ public class Mining {
 		for (int i = 0; i < totalRevs; i++) {
 			RevCommit revision = revisions.get(i);
 			// check if the revision is bug fixing revision or a simple revision
-			if (bugsrcMapper.git.isFixingRevision(revision.getFullMessage(), issues)) {
+			if (bugIds.isFixingRevision(revision.getFullMessage(), issues)) {
 				try {
 					// get all the files of the revisions
 					List<String> files = bugsrcMapper.git.readElementsAt(repository, revision.getId().getName());
@@ -77,7 +78,7 @@ public class Mining {
 					// this bugs in this commit then record
 					// else you simply ignore this
 					for (String name : files) {
-						List<Integer> bugs = bugsrcMapper.git.getIssueIDsFromCommitLog(revision.getFullMessage(),
+						List<Integer> bugs = bugIds.getIssueIDsFromCommitLog(revision.getFullMessage(),
 								issues);
 						if (!bugsrcMapper.fileBugIndex.containsValue(name)) {
 							bugsrcMapper.fileBugIndex.put(name, bugs);

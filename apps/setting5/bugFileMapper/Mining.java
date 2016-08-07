@@ -11,7 +11,6 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
 import br.ufpe.cin.groundhog.Issue;
-import setting1.bugFileMapper.VCSModule;
 
 /**
  * Created by nmtiwari on 7/20/16. A class for mapping the files with bugs. This

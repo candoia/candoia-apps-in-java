@@ -103,6 +103,6 @@ public class Mining {
 				bugCounter.put(name, count);
 			}
 		}
-		Visualization.saveGraph(bugCounter, "/Users/nmtiwari/Desktop/bug.html");
+		Visualization.saveGraph(bugCounter, args[1]+bugsrcMapper.projName+"bugFileMapper.html");
 	}
 }

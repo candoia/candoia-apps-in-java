@@ -179,36 +179,6 @@ public class VCSModule {
 		return revisions;
 	}
 
-	public void getTags(final List<String> names, final List<String> commits) {
-		// TODO
-	}
-
-	public void getBranches(final List<String> names, final List<String> commits) {
-		// TODO
-	}
-
-	/*
-	 * @fileContent: A file content as string returns AST of the content using
-	 * Java JDT.
-	 */
-	public ASTNode createAst(String fileContent) {
-		Map<String, String> options = JavaCore.getOptions();
-		options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-		options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
-		options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
-		ASTParser parser = ASTParser.newParser(AST.JLS3);
-		parser.setSource(fileContent.toCharArray());
-		parser.setCompilerOptions(options);
-		try {
-			ASTNode ast = parser.createAST(null);
-			return ast;
-		} catch (Exception e) {
-			parser.setSource(" ".toCharArray());
-			ASTNode ast = parser.createAST(null);
-			return ast;
-		}
-	}
-
 	public SVNRepository getRepository() {
 		return this.repository;
 	}
@@ -233,42 +203,5 @@ public class VCSModule {
 			return null;
 		}
 
-	}
-
-	public String getFileContent(String filePath, long revisionId, SVNProperties svnProperties,
-			ByteArrayOutputStream os) {
-		try {
-			this.repository.getFile(filePath, revisionId, svnProperties, os);
-			return os.toString();
-		} catch (SVNException e) {
-			// TODO Auto-generated catch block
-			// e.printStackTrace();
-		}
-		return "";
-	}
-
-	public ArrayList<String> getAllFilesFromHead(ArrayList<String> results) {
-		try {
-			return listEntries(results, "", "");
-			// return listEntries(results, "", this.url.getPath()+"/");
-		} catch (SVNException e) {
-			e.printStackTrace();
-		}
-		return results;
-	}
-
-	private ArrayList<String> listEntries(ArrayList<String> results, String path, String rootPath) throws SVNException {
-		Collection entries = this.repository.getDir(path, -1, new SVNProperties(), (Collection) null);
-		Iterator iterator = entries.iterator();
-		while (iterator.hasNext()) {
-			SVNDirEntry entry = (SVNDirEntry) iterator.next();
-			if (entry.getKind() == SVNNodeKind.FILE) {
-				results.add((path.equals("")) ? rootPath + entry.getName() : rootPath + path + "/" + entry.getName());
-			}
-			if (entry.getKind() == SVNNodeKind.DIR) {
-				listEntries(results, (path.equals("")) ? entry.getName() : path + "/" + entry.getName(), rootPath);
-			}
-		}
-		return results;
 	}
 }

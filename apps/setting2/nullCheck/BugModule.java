@@ -10,7 +10,6 @@ import java.util.regex.Pattern;
 import b4j.core.*;
 import b4j.core.session.BugzillaHttpSession;
 import b4j.core.Issue;
-import svnConnector.SVNTicket;
 
 //import org.apache.commons.configuration.*;
 

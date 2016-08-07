@@ -21,13 +21,13 @@ import br.ufpe.cin.groundhog.http.Requests;
 public class SearchIssues {
     private final Gson gson;
     private final Requests requests;
-    private final gitConnector.URLBuilder builder;
+    private final URLBuilder builder;
 
     @Inject
     public SearchIssues(Requests requests) {
         this.requests = requests;
         this.gson = new Gson();
-        this.builder = Guice.createInjector(new HttpModule()).getInstance(gitConnector.URLBuilder.class);
+        this.builder = Guice.createInjector(new HttpModule()).getInstance(URLBuilder.class);
     }
 
     /*
