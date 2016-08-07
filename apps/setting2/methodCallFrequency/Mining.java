@@ -2,6 +2,7 @@ package setting2.methodCallFrequency;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -28,6 +29,7 @@ import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
+import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNProperties;
 
 /**
@@ -35,24 +37,23 @@ import org.tmatesoft.svn.core.SVNProperties;
  */
 public class Mining {
 	private VCSModule svn;
-	private String userName;
-	private String projName;
-
-	private Mining(String repoPath) {
-		this.svn = new VCSModule(repoPath);
-		String[] details = repoPath.split("/");
-		this.projName = details[details.length - 1];
-		this.userName = details[details.length - 2];
-	}
+	private String url;
 
 	/*
 	 * url must be of form: username@url
 	 */
 	private Mining(String url, String path) {
-		this.userName = url.substring(0, url.indexOf('@'));
+		this.url = url;
 		url = url.substring(url.indexOf('@') + 1);
-		this.projName = url.substring(url.lastIndexOf('/') + 1);
-		VCSModule.cloneRepo(url, path);
+		if(!new File(path).isDirectory()){
+			try {
+				ForgeModule.clone(url, path);
+			} catch (SVNException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		  
 		this.svn = new VCSModule(path);
 	}
 
@@ -60,47 +61,32 @@ public class Mining {
 	 * Main function for NullCheckGit_GIT_Ticket
 	 */
 	public static void main(String[] args) {
-		long startTime = System.currentTimeMillis();
-
-		HashMap<String, Integer> indexMap = Mining.analyze(args);
-		for (String str : indexMap.keySet()) {
-			System.out.println(str + " -> " + indexMap.get(str));
-		}
+		Mining mining = new Mining(args[0], args[1]);
+		HashMap<String, Integer> indexMap = mining.analyze();
 		HashMap<String, Integer> updaedIndexMap = new HashMap<>();
 		for (String str : indexMap.keySet()) {
 			if (indexMap.get(str) > 15) {
 				updaedIndexMap.put(str.replaceAll("\n", ""), indexMap.get(str));
 			}
-
 		}
-		Visualization.saveGraph(updaedIndexMap, "/Users/nmtiwari/Desktop/graph.html");
+		Visualization.saveGraph(updaedIndexMap, args[1]+mining.url+"_methodusage.html");
 	}
 
 	/*
 	 * Main function for NullCheckGit_GIT_Ticket
 	 */
-	public static HashMap<String, Integer> analyze(String[] args) {
+	public HashMap<String, Integer> analyze() {
 		long startTime = System.currentTimeMillis();
-		Mining freq = null;
-		// path of the repository
-		if (args.length < 1) {
-			freq = new Mining("/Users/nmtiwari/Desktop/test/pagal/projects");
-		} else if (args.length == 2) {
-			freq = new Mining(args[1], args[0]);
-		} else {
-			freq = new Mining(args[0]);
-		}
-
 		ArrayList<String> allFiles = new ArrayList<>();
-		allFiles = freq.svn.getAllFilesFromHead(allFiles);
+		allFiles = this.svn.getAllFilesFromHead(allFiles);
 		HashMap<String, Integer> indexMap = new HashMap<String, Integer>();
 		HashMap<String, String> varTyp = new HashMap<String, String>();
 
 		for (String path : allFiles) {
 			if (path.endsWith(".java")) {
 				// String content = freq.readFile(path);
-				String content = freq.svn.getFileContent(path, -1, new SVNProperties(), new ByteArrayOutputStream());
-				ASTNode ast = freq.svn.createAst(content);
+				String content = this.svn.getFileContent(path, -1, new SVNProperties(), new ByteArrayOutputStream());
+				ASTNode ast = this.svn.createAst(content);
 				varTyp = countMethodCallFreqWithTypes(ast, varTyp);
 				indexMap = countMethodCallFreq(ast, indexMap, varTyp);
 			}

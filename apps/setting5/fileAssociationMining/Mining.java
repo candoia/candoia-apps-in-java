@@ -30,6 +30,7 @@ public class Mining {
 		if (!new File(path).isDirectory())
 		  VCSModule.cloneRepo(url, path);
 		this.svn = new VCSModule(path);
+		this.fileIndex = new HashMap<>();
 	}
 
 	/*
