@@ -1,4 +1,4 @@
-package settging1.nullCheck;
+package setting1.methodCallFrequency;
 
 import java.io.BufferedReader;
 import java.io.Console;
@@ -23,7 +23,6 @@ import br.ufpe.cin.groundhog.search.SearchModule;
  * Created by nmtiwari on 7/9/16.
  */
 public class ForgeModule {
-    private SearchIssues searchIssues;
     private Project project;
     private List<Issue> _issues;
 //    private List<Commit> _commits;
@@ -33,16 +32,13 @@ public class ForgeModule {
     
     ForgeModule(String username, String projName) {
         Injector injector = Guice.createInjector(new SearchModule());
-        this.searchIssues = injector.getInstance(SearchIssues.class);
         User user = new User(username);
         this.project = new Project(user, projName);
         this._issues = new ArrayList<>();
-//        this._commits = new ArrayList<>();
     }
 
     public static boolean clone(String URL, String localpaths)
             throws IOException, GitAPIException {
-//        String url = URL;
         File localPath = new File(localpaths);
         if (!localPath.exists())
             localPath.mkdir();
@@ -69,10 +65,6 @@ public class ForgeModule {
         folder.delete();
     }
 
-    List<Issue> get_Issues() {
-        this._issues = this.searchIssues.getAllProjectIssues(this.project);
-        return this._issues;
-    }
     
     private static String readLine() throws IOException {
         if (System.console() != null) {

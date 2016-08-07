@@ -1,4 +1,4 @@
-package settging1.methodCallFrequency;
+package setting1.churnRate;
 
 import java.io.BufferedReader;
 import java.io.Console;

@@ -2,10 +2,6 @@ package setting4.methodCallFrequency;
 
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
-
-import settging1.churnRate.ForgeModule;
-import settging1.churnRate.VCSModule;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;

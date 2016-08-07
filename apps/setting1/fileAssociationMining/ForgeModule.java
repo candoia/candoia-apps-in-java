@@ -1,4 +1,4 @@
-package settging1.fileAssociationMining;
+package setting1.fileAssociationMining;
 
 import java.io.BufferedReader;
 import java.io.Console;

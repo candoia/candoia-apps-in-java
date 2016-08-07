@@ -1,4 +1,4 @@
-package settging1.nullCheck;
+package setting1.nullCheck;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

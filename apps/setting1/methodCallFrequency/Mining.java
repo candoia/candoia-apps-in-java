@@ -1,7 +1,13 @@
-package settging1.methodCallFrequency;
+package setting1.methodCallFrequency;
 
 import org.eclipse.jdt.core.dom.*;
+import org.eclipse.jgit.api.errors.GitAPIException;
+
+import setting1.churnRate.ForgeModule;
+import setting1.churnRate.VCSModule;
+
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -13,17 +19,23 @@ import java.util.List;
  */
 public class Mining {
 	private VCSModule git;
-	private String userName;
-	private String projName;
+	public String url;
 
 	/*
 	 * url must be of form: username@url
 	 */
 	private Mining(String url, String path) {
-		this.userName = url.substring(0, url.indexOf('@'));
+		this.url = url;
 		url = url.substring(url.indexOf('@') + 1);
-		this.projName = url.substring(url.lastIndexOf('/') + 1);
-		VCSModule.cloneRepo(url, path);
+		if (!new File(path).isDirectory()) {
+			try {
+				ForgeModule.clone(url, path);
+			} catch (IOException | GitAPIException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
 		this.git = new VCSModule(path);
 	}
 
@@ -33,10 +45,15 @@ public class Mining {
 	public static void main(String[] args) {
 		Mining mining = new Mining(args[0], args[1]);
 		HashMap<String, Integer> indexMap = mining.analyze();
+		HashMap<String, Integer> results = new HashMap<>();
 		for (String str : indexMap.keySet()) {
 			System.out.println(str + " -> " + indexMap.get(str));
+			if(indexMap.get(str) > 10){
+				results.put(str, indexMap.get(str));	
+			}
+			 
 		}
-		Visualization.saveGraph(indexMap, args[1] + "_methodCallFrequency.html");
+		Visualization.saveGraph(results, args[1] + "_methodCallFrequency.html");
 	}
 
 	/*
@@ -208,7 +225,8 @@ public class Mining {
 				} else {
 					if (e != null) {
 						typName = e.toString();
-						typName = typName.substring(0, typName.indexOf('.', 0));
+						if(typName.contains("."))
+						  typName = typName.substring(0, typName.indexOf('.', 0));
 						if (varTypMap.containsKey(typName))
 							typName = varTypMap.get(typName);
 					}

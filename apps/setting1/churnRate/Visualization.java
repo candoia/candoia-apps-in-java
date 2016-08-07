@@ -1,4 +1,4 @@
-package settging1.nullCheck;
+package setting1.churnRate;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -10,7 +10,7 @@ import java.util.HashMap;
  */
 public class Visualization {
     static String option = "       var options = {\n" +
-            "          title: '#Null Checks',\n" +
+            "          title: 'Churn Rate',\n" +
             "          is3D: true,\n" +
             "        };";
     static String footer = "var chart = new google.visualization.ColumnChart(document.getElementById('piechart_3d'));\n" +
@@ -32,8 +32,11 @@ public class Visualization {
             "      function drawChart() {\nvar data = google.visualization.arrayToDataTable([\n";
     private static String headerE = " ]);";
 
-    private static String convert(HashMap<String, Integer> map) {
-        String result = "['METHOD', 'NUMBER OF USAGE'],";
+    /*
+     * A function to convert HashMap in graph
+     */
+    private static String convert(HashMap<String, Double> map) {
+        String result = "['METHOD', 'Churn Rate based on number of lines'],";
         for (String k : map.keySet()) {
             result += "['" + k + "', " + map.get(k) + "],\n";
         }
@@ -46,7 +49,10 @@ public class Visualization {
         return header + data + headerE + "\n" + option + "\n" + footer;
     }
 
-    public static void saveGraph(HashMap<String, Integer> grpData, String path) {
+    /*
+     * saves the computed data stred in hashmap in a graph format
+     */
+    public static void saveGraph(HashMap<String, Double> grpData, String path) {
         String result = convert(grpData);
         result = getDataAsGraph(result);
 
@@ -62,4 +68,3 @@ public class Visualization {
         }
     }
 }
-

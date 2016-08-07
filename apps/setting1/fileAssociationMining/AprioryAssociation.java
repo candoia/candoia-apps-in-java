@@ -1,4 +1,4 @@
-package settging1.fileAssociationMining;
+package setting1.fileAssociationMining;
 
 import weka.associations.Apriori;
 import weka.core.Instances;

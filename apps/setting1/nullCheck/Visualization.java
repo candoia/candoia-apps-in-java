@@ -1,4 +1,4 @@
-package settging1.fileAssociationMining;
+package setting1.nullCheck;
 
 import java.io.File;
 import java.io.FileWriter;

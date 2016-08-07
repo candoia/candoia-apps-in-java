@@ -1,4 +1,4 @@
-package settging1.methodCallFrequency;
+package setting1.methodCallFrequency;
 
 import java.io.File;
 import java.io.IOException;

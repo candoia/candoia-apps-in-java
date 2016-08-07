@@ -1,4 +1,4 @@
-package settging1.nullCheck;
+package setting1.nullCheck;
 
 import br.ufpe.cin.groundhog.Issue;
 import org.eclipse.jdt.core.dom.*;
