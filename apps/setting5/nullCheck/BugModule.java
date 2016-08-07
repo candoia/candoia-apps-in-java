@@ -128,7 +128,7 @@ public class BugModule{
 		return isFixing;
 	}
 	
-	public ArrayList<SVNTicket> getIssues(String user, String project) {
+	public ArrayList<SVNTicket> getIssues(String project) {
 		ArrayList<SVNTicket> issues = new ArrayList<>();
 		Requests requests = new Requests();
 		URLBuilder urlbuilder = Guice.createInjector(new HttpModule()).getInstance(URLBuilder.class);

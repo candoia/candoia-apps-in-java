@@ -1,13 +1,10 @@
 package setting5.bugFileMapper;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -17,179 +14,100 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
-import org.tmatesoft.svn.core.SVNDirEntry;
-import org.tmatesoft.svn.core.SVNException;
-import org.tmatesoft.svn.core.SVNLogEntry;
-import org.tmatesoft.svn.core.SVNLogEntryPath;
-import org.tmatesoft.svn.core.SVNNodeKind;
-import org.tmatesoft.svn.core.SVNProperties;
-import org.tmatesoft.svn.core.SVNURL;
-import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
-import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory;
-import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
-import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
-import org.tmatesoft.svn.core.io.SVNRepository;
-import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
-import org.tmatesoft.svn.core.wc.SVNClientManager;
-import org.tmatesoft.svn.core.wc.SVNWCUtil;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.errors.RevisionSyntaxException;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectLoader;
+import org.eclipse.jgit.lib.ObjectReader;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevTree;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.treewalk.CanonicalTreeParser;
+import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.treewalk.filter.PathFilter;
 
-import br.ufpe.cin.groundhog.http.Requests;
+import br.ufpe.cin.groundhog.Issue;
 
 /**
- * @author hoan
- * @author rdyer
+ * Created by nmtiwari on 7/9/16.
+ * This is class for handling git connections and cloning from repo
  */
 public class VCSModule {
-	protected ArrayList<SVNCommit> revisions = new ArrayList<SVNCommit>();
+	// patters to check if fixings
 	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
-	static {
-		// For using over http:// and https://
-		DAVRepositoryFactory.setup();
-		// For using over svn:// and svn+xxx://
-		SVNRepositoryFactoryImpl.setup();
-		// For using over file:///
-		FSRepositoryFactory.setup();
-	}
+	private FileRepositoryBuilder builder;
+	private Repository repository;
+	private Git git;
+	private String path;
+	// private String userName;
+	// private String projName;
 
-	private SVNRepository repository = null;
-	private SVNURL url;
-
-	private ISVNAuthenticationManager authManager;
-	private SVNClientManager clientManager = null;
-
-	private long lastSeenRevision = 1l;
-	private long latestRevision = 0l;
-
-	public VCSModule(final String url) {
-		this(url, "", "");
-	}
-
-	public VCSModule() {
-		this.url = null;
-		this.authManager = null;
-		this.repository = null;
-	}
-
-	// clone the repository from remote at given local path
-	public static boolean cloneRepo(String URL, String repoPath) {
-		// String url = URL.substring(URL.indexOf('@') + 1, URL.length()) +
-		// ".git";
+	public VCSModule(String path) {
+		this.builder = new FileRepositoryBuilder();
+		this.path = path;
 		try {
-			ForgeModule.clone(URL, repoPath);
-		} catch (SVNException e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-
-	public VCSModule(final String url, final String username, final String password) {
-		try {
-			this.url = SVNURL.fromFile(new File(url));
-
-			this.authManager = SVNWCUtil.createDefaultAuthenticationManager(username, password);
-
-			this.repository = SVNRepositoryFactory.create(this.url);
-			this.repository.setAuthenticationManager(this.authManager);
-
-			this.latestRevision = this.repository.getLatestRevision();
-		} catch (final SVNException e) {
+			this.repository = this.builder.setGitDir(new File(path + "/.git")).setMustExist(true).build();
+			this.git = new Git(this.repository);
+		} catch (java.io.IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void close() {
-		repository.closeSession();
+
+	public Repository getRepository() {
+		return this.repository;
 	}
 
-	public boolean clear() {
-		this.close();
-		return true;
-	}
-
-	public boolean initialize(String path) {
-		try {
-			this.url = SVNURL.parseURIEncoded("file:///" + path);
-			this.authManager = SVNWCUtil.createDefaultAuthenticationManager("", "");
-			this.repository = SVNRepositoryFactory.create(this.url);
-			this.repository.setAuthenticationManager(this.authManager);
-			this.latestRevision = this.repository.getLatestRevision();
-		} catch (final SVNException e) {
-			e.printStackTrace();
-			return false;
-		}
-		return true;
-	}
-
-	public String getLastCommitId() {
-		if (latestRevision == 0l)
-			return null;
-		return "" + latestRevision;
-	}
-
-	public void setLastSeenCommitId(final String id) {
-		lastSeenRevision = Long.parseLong(id);
-	}
-
-	public ArrayList<SVNCommit> getAllRevisions() {
-		if (latestRevision < 1l)
-			return revisions;
-
-		try {
-			final Collection<SVNLogEntry> logEntries = repository.log(new String[] { "" }, null, lastSeenRevision + 1l,
-					latestRevision, true, true);
-
-			for (final SVNLogEntry logEntry : logEntries) {
-				final SVNCommit revision = new SVNCommit(repository, this, logEntry);
-
-				revision.setId("" + logEntry.getRevision());
-				if (logEntry.getAuthor() == null)
-					revision.setCommitter(logEntry.getAuthor());
-				else
-					revision.setCommitter("anonymous");
-				revision.setDate(logEntry.getDate());
-				revision.setMessage(logEntry.getMessage());
-
-				if (logEntry.getChangedPaths() != null && logEntry.getChangedPaths().size() > 0) {
-					final HashMap<String, String> rChangedPaths = new HashMap<String, String>();
-					final HashMap<String, String> rRemovedPaths = new HashMap<String, String>();
-					final HashMap<String, String> rAddedPaths = new HashMap<String, String>();
-					for (final Iterator changedPaths = logEntry.getChangedPaths().keySet().iterator(); changedPaths
-							.hasNext();) {
-						final SVNLogEntryPath entryPath = (SVNLogEntryPath) logEntry.getChangedPaths()
-								.get(changedPaths.next());
-						if (repository.checkPath(entryPath.getPath(), logEntry.getRevision()) == SVNNodeKind.FILE) {
-							if (entryPath.getType() == SVNLogEntryPath.TYPE_DELETED)
-								rRemovedPaths.put(entryPath.getPath(), entryPath.getCopyPath());
-							else if (entryPath.getType() == SVNLogEntryPath.TYPE_ADDED)
-								rAddedPaths.put(entryPath.getPath(), entryPath.getCopyPath());
-							else
-								rChangedPaths.put(entryPath.getPath(), entryPath.getCopyPath());
-						}
-					}
-					revision.setChangedPaths(rChangedPaths);
-					revision.setRemovedPaths(rRemovedPaths);
-					revision.setAddedPaths(rAddedPaths);
+	/*
+	 * @commitLog: commit message
+	 * returns boolean
+	 * Checks if the revision has any of the fixing patterns
+	 */
+	public boolean isFixingRevision(String commitLog) {
+		boolean isFixing = false;
+		Pattern p;
+		if (commitLog != null) {
+			String tmpLog = commitLog.toLowerCase();
+			for (int i = 0; i < fixingPatterns.length; i++) {
+				String patternStr = fixingPatterns[i];
+				p = Pattern.compile(patternStr);
+				Matcher m = p.matcher(tmpLog);
+				isFixing = m.find();
+				if (isFixing) {
+					break;
 				}
-
-				this.revisions.add(revision);
 			}
-		} catch (final SVNException e) {
+		}
+		return isFixing;
+	}
+
+	/*
+	 * A function to get all the revisions of the repository
+	 */
+	public ArrayList<RevCommit> getAllRevisions() {
+		ArrayList<RevCommit> revisions = new ArrayList<>();
+
+		Iterable<RevCommit> allRevisions = null;
+		try {
+			allRevisions = git.log().call();
+		} catch (GitAPIException e) {
 			e.printStackTrace();
+		}
+
+		for (RevCommit rev : allRevisions) {
+			revisions.add(rev);
 		}
 		return revisions;
 	}
 
-	public void getTags(final List<String> names, final List<String> commits) {
-		// TODO
-	}
-
-	public void getBranches(final List<String> names, final List<String> commits) {
-		// TODO
-	}
-
 	/*
-	 * @fileContent: A file content as string returns AST of the content using
-	 * Java JDT.
+	 * @fileContent: A file content as string
+	 * returns AST of the content using Java JDT.
 	 */
 	public ASTNode createAst(String fileContent) {
 		Map<String, String> options = JavaCore.getOptions();
@@ -199,76 +117,254 @@ public class VCSModule {
 		ASTParser parser = ASTParser.newParser(AST.JLS3);
 		parser.setSource(fileContent.toCharArray());
 		parser.setCompilerOptions(options);
-		try {
-			ASTNode ast = parser.createAST(null);
-			return ast;
-		} catch (Exception e) {
-			parser.setSource(" ".toCharArray());
-			ASTNode ast = parser.createAST(null);
-			return ast;
+		ASTNode ast = parser.createAST(null);
+		return ast;
+	}
+
+	/*
+ 	 * @cur: Current revision
+ 	 * @prev: previsous revision
+ 	 * Returns a list of DiffEntries from the current and previous revision
+ 	*/
+	public List<DiffEntry> diffsBetweenTwoRevAndChangeTypes(RevCommit cur, RevCommit prev)
+			throws RevisionSyntaxException, IOException, GitAPIException {
+		List<DiffEntry> diffs = new ArrayList<>();
+		ObjectReader reader = this.repository.newObjectReader();
+		CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
+		oldTreeIter.reset(reader, prev.getTree());
+		CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
+		newTreeIter.reset(reader, cur.getTree());
+
+		// finally get the list of changed files
+		diffs = this.git.diff().setNewTree(newTreeIter).setOldTree(oldTreeIter).call();
+		return diffs;
+	}
+
+	/*
+	 * Reads a file from a commit id, if the file exists. Else throws
+	 * IllegalStateException
+	 */
+	public String readFile(ObjectId lastCommitId, String path) throws IOException {
+		// System.out.println("reading: " + path);
+		RevWalk revWalk = new RevWalk(this.repository);
+		RevCommit commit = revWalk.parseCommit(lastCommitId);
+		// and using commit's tree find the path
+		RevTree tree = commit.getTree();
+		TreeWalk treeWalk = new TreeWalk(this.repository);
+		treeWalk.addTree(tree);
+		treeWalk.setRecursive(true);
+		treeWalk.setFilter(PathFilter.create(path));
+		if (!treeWalk.next()) {
+			throw new IllegalStateException(path);
 		}
+		ObjectId objectId = treeWalk.getObjectId(0);
+		ObjectLoader loader = this.repository.open(objectId);
+		InputStream in = loader.openStream();
+		java.util.Scanner s = new java.util.Scanner(in);
+		s.useDelimiter("\\A");
+		String result = s.hasNext() ? s.next() : "";
+		s.close();
+		in.close();
+		return result;
 	}
 
-	public SVNRepository getRepository() {
-		return this.repository;
+	/*
+	 * @username: Repository username
+     * @projName: project name
+     * retuns a list of issues from the git tickets using the username and projName
+     */
+	public List<Issue> getIssues(String username, String projName) {
+		ForgeModule git = new ForgeModule(username, projName);
+		List<Issue> issues = git.get_Issues();
+		return issues;
 	}
 
-	public ArrayList<SVNLogEntry> diffsBetweenTwoRevAndChangeTypes(SVNCommit revisionNew, SVNCommit revisionOld) {
-		try {
-			repository.setAuthenticationManager(authManager);
-			Collection logEntries = new ArrayList<>();
-			ArrayList<SVNLogEntry> result = new ArrayList<>();
-			logEntries = repository.log(new String[] { "" }, null, revisionOld.getId(), revisionNew.getId(), true,
-					true);
-
-			for (Iterator entries = logEntries.iterator(); entries.hasNext();) {
-				SVNLogEntry logEntry = (SVNLogEntry) entries.next();
-				result.add(logEntry);
-				// System.out.println(String.format("revision: %d, date %s",
-				// logEntry.getRevision(), logEntry.getDate()));
+	/*
+	 * A simple method which fetches all the numbers from the string.
+	 * Note: It does not verify if the numbers are real bug ids or not.
+	 */
+	public List<Integer> getIdsFromCommitMsg(String commitLog) {
+		String commitMsg = commitLog;
+		commitMsg = commitMsg.replaceAll("[^0-9]+", " ");
+		List<String> idAsString = Arrays.asList(commitMsg.trim().split(" "));
+		List<Integer> ids = new ArrayList<Integer>();
+		for (String id : idAsString) {
+			try {
+				if (!ids.contains(Integer.parseInt(id)))
+					ids.add(Integer.parseInt(id));
+			} catch (NumberFormatException e) {
+				// e.printStackTrace();
 			}
-			return result;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
 		}
+		return ids;
+	}
+
+	/*
+	 * A method to get all issue ids for given username and projName.
+	 */
+	public List<Integer> getIssueIds(String username, String projName) {
+		ForgeModule git = new ForgeModule(username, projName);
+		List<Issue> issues = git.get_Issues();
+		List<Integer> ids = new ArrayList<Integer>();
+		for (Issue issue : issues) {
+			ids.add(issue.getId());
+		}
+		return ids;
+	}
+
+	/*
+	 * A overloaded version of getIssueIds
+	 */
+	public List<Integer> getIssueIds(List<Issue> issues) {
+		List<Integer> ids = new ArrayList<Integer>();
+		for (Issue issue : issues) {
+			ids.add(issue.getId());
+		}
+		return ids;
+	}
+
+	/*
+	 * A method to get a list of issue numbers. Issue number is different than issue id.
+     */
+	public List<Integer> getIssueNumbers(List<Issue> issues) {
+		List<Integer> ids = new ArrayList<Integer>();
+		for (Issue issue : issues) {
+			ids.add(issue.getNumber());
+		}
+		return ids;
+	}
+
+	/*
+	 * @msg: COmmit message
+	 * @issues: list of all issues
+	 * return boolean if this msg contains any real bug id or not
+	 */
+	public boolean isFixingRevision(String msg, List<Issue> issues) {
+		if (isFixingRevision(msg)) {
+			List<Integer> ids = getIssueNumbers(issues);
+			List<Integer> bugs = getIdsFromCommitMsg(msg);
+			for (Integer i : bugs) {
+				if (ids.contains(i)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/*
+	 * @log: commit message
+	 * @issues: list of all issues
+	 * returns a list of integers representing issue numbers.
+	 * This method gives you actual issue numbers.
+	 */
+	public List<Integer> getIssueIDsFromCommitLog(String log, List<Issue> issues) {
+		List<Integer> ids = getIdsFromCommitMsg(log);
+		List<Integer> bugs = new ArrayList<>();
+		for (Integer i : ids) {
+			if (isBug(issues, i)) {
+				bugs.add(i);
+			}
+		}
+		return bugs; 
+	}
+
+	/*
+	 * @repository: Git repository
+	 * @commit: revision id
+	 * Returns list of file paths from this revision of given repository
+	 */
+	public List<String> readElementsAt(Repository repository, String commit) throws IOException {
+		RevCommit revCommit = buildRevCommit(repository, commit);
+
+		// and using commit's tree find the path
+		RevTree tree = revCommit.getTree();
+		// System.out.println("Having tree: " + tree + " for commit " + commit);
+
+		List<String> items = new ArrayList<>();
+
+		// shortcut for root-path
+		TreeWalk treeWalk = new TreeWalk(repository);
+		treeWalk.addTree(tree);
+		treeWalk.setRecursive(true);
+		treeWalk.setPostOrderTraversal(true);
+
+		while (treeWalk.next()) {
+			items.add(treeWalk.getPathString());
+		}
+		return items;
+	}
+
+	/*
+	 * @repository: Git Repository
+	 * @commit: Revsion id
+	 * returns a revision commit version of the revision id
+	 */
+	public RevCommit buildRevCommit(Repository repository, String commit) throws IOException {
+		// a RevWalk allows to walk over commits based on some filtering that is
+		// defined
+		RevWalk revWalk = new RevWalk(repository);
+		return revWalk.parseCommit(ObjectId.fromString(commit));
 
 	}
 
-	public String getFileContent(String filePath, long revisionId, SVNProperties svnProperties,
-			ByteArrayOutputStream os) {
+	/*
+	 * A method to get all the files from the head version. It is kind of
+     * getting latest revision of the repository.
+     */
+	public List<String> getAllFilesFromHead() {
+		ArrayList<String> results = new ArrayList<>();
 		try {
-			this.repository.getFile(filePath, revisionId, svnProperties, os);
-			return os.toString();
-		} catch (SVNException e) {
-			// TODO Auto-generated catch block
-			// e.printStackTrace();
-		}
-		return "";
-	}
-
-	public ArrayList<String> getAllFilesFromHead(ArrayList<String> results) {
-		try {
-			return listEntries(results, "", "");
-			// return listEntries(results, "", this.url.getPath()+"/");
-		} catch (SVNException e) {
-			e.printStackTrace();
+			Ref head = this.repository.getRef("HEAD");
+			RevWalk walk = new RevWalk(this.repository);
+			RevCommit revision = walk.parseCommit(head.getObjectId());
+			RevTree tree = revision.getTree();
+			TreeWalk walker = new TreeWalk(this.repository);
+			walker.addTree(tree);
+			walker.setRecursive(true);
+//		Can set a filter to read all java files only
+//		walker.setFilter(PathFilter.create("README.md"));
+			while (walker.next()) {
+				results.add(walker.getPathString());
+			}
+		} catch (IOException ex) {
+			ex.printStackTrace();
 		}
 		return results;
 	}
 
-	private ArrayList<String> listEntries(ArrayList<String> results, String path, String rootPath) throws SVNException {
-		Collection entries = this.repository.getDir(path, -1, new SVNProperties(), (Collection) null);
-		Iterator iterator = entries.iterator();
-		while (iterator.hasNext()) {
-			SVNDirEntry entry = (SVNDirEntry) iterator.next();
-			if (entry.getKind() == SVNNodeKind.FILE) {
-				results.add((path.equals("")) ? rootPath + entry.getName() : rootPath + path + "/" + entry.getName());
+	public List<String> getAllFilesFromHeadWithAbsPath() {
+		ArrayList<String> results = new ArrayList<>();
+		try {
+			Ref head = this.repository.getRef("HEAD");
+			RevWalk walk = new RevWalk(this.repository);
+			RevCommit revision = walk.parseCommit(head.getObjectId());
+			RevTree tree = revision.getTree();
+			TreeWalk walker = new TreeWalk(this.repository);
+			walker.addTree(tree);
+			walker.setRecursive(true);
+//		Can set a filter to read all java files only
+//		walker.setFilter(PathFilter.create("README.md"));
+			while (walker.next()) {
+				results.add(this.path + "/" + walker.getPathString());
 			}
-			if (entry.getKind() == SVNNodeKind.DIR) {
-				listEntries(results, (path.equals("")) ? entry.getName() : path + "/" + entry.getName(), rootPath);
-			}
+		} catch (IOException ex) {
+			ex.printStackTrace();
 		}
 		return results;
+	}
+
+	/*
+	 * @issues: List of all github issues
+	 * @id: integer
+	 * returns if id is actual bug id or not
+	 */
+	private boolean isBug(List<Issue> issues, int id) {
+		for (Issue issue : issues) {
+			if (id == issue.getNumber()) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

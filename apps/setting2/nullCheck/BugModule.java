@@ -26,7 +26,7 @@ public class BugModule {
 		// Open the session
 		if (session.open()) {
 			DefaultSearchData searchData = new DefaultSearchData();
-			searchData.add("product", product);
+			searchData.add("product", "Tomcat 8");
 
 			// Perform the search
 			Iterable<b4j.core.Issue> it = session.searchBugs(searchData, null);

@@ -1,6 +1,7 @@
 package setting5.nullCheck;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,29 +26,19 @@ public class Mining {
 	private String userName;
 	private String projName;
 	private VCSModule svn;
-	private String bugURL;
+	private String url;
 	private String product;
-
-	private Mining(String repoPath, String bug_url) {
-		this.svn = new VCSModule(repoPath);
-		String[] details = repoPath.split("/");
-		this.projName = details[details.length - 1];
-		this.userName = details[details.length - 2];
-		this.bugURL = bug_url.substring(bug_url.indexOf('@') + 1);
-		this.product = bug_url.substring(0, bug_url.indexOf('@'));
-	}
 
 	/*
 	 * url must be of form: username@url
 	 */
-	private Mining(String url, String path, String bug_url) {
+	private Mining(String url, String path) {
+		this.url = url;
 		this.userName = url.substring(0, url.indexOf('@'));
-		url = url.substring(url.indexOf('@') + 1);
 		this.projName = url.substring(url.lastIndexOf('/') + 1);
-		VCSModule.cloneRepo(url, path);
+		if(!new File(path).isDirectory())
+		  VCSModule.cloneRepo(url.substring(url.indexOf('@') + 1), path);
 		this.svn = new VCSModule(path);
-		this.bugURL = bug_url.substring(bug_url.indexOf('@') + 1);
-		this.product = bug_url.substring(0, bug_url.indexOf('@'));
 	}
 
 	/*
@@ -57,11 +48,10 @@ public class Mining {
 		long startTime = System.currentTimeMillis();
 		Mining nullCheck = null;
 		// path of the repository
-		if (args.length == 3) {
-			nullCheck = new Mining(args[1], args[0], args[2]);
+		if (args.length == 2) {
+			nullCheck = new Mining(args[0], args[1]);
 		} else {
-			nullCheck = new Mining("/Users/nmtiwari/Desktop/test/pagal/paninij",
-					"Tomcat 8@https://bz.apache.org/bugzilla");
+			throw new IllegalArgumentException();
 		}
 
 		ArrayList<SVNCommit> revisions = nullCheck.svn.getAllRevisions();
@@ -70,9 +60,9 @@ public class Mining {
 		BugModule bugs = new BugModule();
 		int totalRevs = revisions.size();
 		List<SVNTicket> issues = new ArrayList<>();
-		System.out.println(nullCheck.bugURL + "\n" + nullCheck.product);
+		System.out.println(nullCheck.url);
 		try {
-			issues = bugs.getIssues(nullCheck.bugURL, nullCheck.product);
+			issues = bugs.getIssues(nullCheck.projName);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -128,7 +118,7 @@ public class Mining {
 		result.put("total revs", totalRevs);
 		result.put("fixing revisions", fixingRevs.size());
 		result.put("Null fixing revisions", nullFixingRevs.size());
-		Visualization.saveGraph(result, "/Users/nmtiwari/Desktop/null.html");
+		Visualization.saveGraph(result, args[1]+ nullCheck.projName+"_nullCheck.html");
 		System.out.println("Time: " + (endTime - startTime) / 1000.000);
 	}
 

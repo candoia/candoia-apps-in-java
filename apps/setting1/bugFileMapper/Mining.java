@@ -104,7 +104,7 @@ public class Mining {
 		for (String name : bugsrcMapper.fileBugIndex.keySet()) {
 			int count = bugsrcMapper.fileBugIndex.get(name).size();
 			System.out.println(name + " -> " + count);
-			if (count > 1) {
+			if (count > 2) {
 				bugCounter.put(name, count);
 			}
 		}

@@ -1,12 +1,11 @@
 package setting5.bugFileMapper;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import gitConnector.Github;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.Map;
+
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 
 public final class URLBuilder {
@@ -147,25 +146,13 @@ public final class URLBuilder {
         if(this.builder == null)
             throw new UnsupportedOperationException("No parameter URL has been sent!");
         String concat = isFirstParam() ? "?" : "&";
-        if(Github.oaToken == null){
+        if(ForgeModule.oaToken == null){
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             System.out.println("Please provide your authentication token: ");
-//            try {
-//                this.oauthToken = br.readLine();
-//                Github.oaToken = this.oauthToken;
-//            } catch (java.io.IOException ioe) {
-//            }finally{
-//                try {
-//                    br.close();
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-            
-                this.oauthToken = new String(Github.readPassword());
-                Github.oaToken = this.oauthToken;
+                this.oauthToken = new String(ForgeModule.readPassword());
+                ForgeModule.oaToken = this.oauthToken;
         }else{
-            this.oauthToken = Github.oaToken;
+            this.oauthToken = ForgeModule.oaToken;
         }
         String result = this.builder.append(concat).append(oauthToken).toString();
         this.builder.delete(0, result.length());

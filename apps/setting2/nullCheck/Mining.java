@@ -1,6 +1,7 @@
 package setting2.nullCheck;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,7 +45,8 @@ public class Mining {
 		this.userName = url.substring(0, url.indexOf('@'));
 		url = url.substring(url.indexOf('@') + 1);
 		this.projName = url.substring(url.lastIndexOf('/') + 1);
-		VCSModule.cloneRepo(url, path);
+		if(!new File(path).isDirectory())
+		  VCSModule.cloneRepo(url, path);
 		this.svn = new VCSModule(path);
 		this.bugURL = bug_url.substring(bug_url.indexOf('@') + 1);
 		this.product = bug_url.substring(0, bug_url.indexOf('@'));
@@ -58,7 +60,7 @@ public class Mining {
 		Mining nullCheck = null;
 		// path of the repository
 		if (args.length == 3) {
-			nullCheck = new Mining(args[1], args[0], args[2]);
+			nullCheck = new Mining(args[0], args[1], args[2]);
 		} else {
 			nullCheck = new Mining("/Users/nmtiwari/Desktop/test/pagal/paninij",
 					"Tomcat 8@https://bz.apache.org/bugzilla");

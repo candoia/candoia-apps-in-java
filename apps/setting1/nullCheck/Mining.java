@@ -8,6 +8,7 @@ import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,12 +28,20 @@ public class Mining {
      * url must be of form: username@url
      */
     private Mining(String url, String path) {
-        this.userName = url.substring(0, url.indexOf('@'));
-        url = url.substring(url.indexOf('@') + 1);
-        this.projName = url.substring(url.lastIndexOf('/') + 1);
-        VCSModule.cloneRepo(url, path);
-        this.git = new VCSModule(path);
-    }
+		this.userName = url.substring(0, url.indexOf('@'));
+		url = url.substring(url.indexOf('@') + 1);
+		this.projName = url.substring(url.lastIndexOf('/') + 1);
+		if (!new File(path).isDirectory()){
+			try {
+				ForgeModule.clone(url, path);
+			} catch (IOException | GitAPIException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		this.git = new VCSModule(path);
+	}
 
     /*
      * Main function for NullCheckGit_GIT_Ticket
