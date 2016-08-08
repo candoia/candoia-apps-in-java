@@ -1,11 +1,7 @@
 package setting5.methodCallFrequency;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,41 +21,30 @@ import org.eclipse.jdt.core.dom.QualifiedType;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.StringLiteral;
-import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNProperties;
 
-/**
- * Created by nmtiwari on 7/20/16.
- */
 public class Mining {
 	private VCSModule svn;
 	private String url;
 
-	/*
-	 * url must be of form: username@url
-	 */
 	private Mining(String url, String path) {
 		this.url = url;
 		url = url.substring(url.indexOf('@') + 1);
-		if(!new File(path).isDirectory()){
+		if (!new File(path).isDirectory()) {
 			try {
 				ForgeModule.clone(url, path);
 			} catch (SVNException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-		  
+
 		this.svn = new VCSModule(path);
 	}
 
-	/*
-	 * Main function for NullCheckGit_GIT_Ticket
-	 */
 	public static void main(String[] args) {
 		Mining mining = new Mining(args[0], args[1]);
 		HashMap<String, Integer> indexMap = mining.analyze();
@@ -69,12 +54,9 @@ public class Mining {
 				updaedIndexMap.put(str.replaceAll("\n", ""), indexMap.get(str));
 			}
 		}
-		Visualization.saveGraph(updaedIndexMap, args[1]+mining.url+"_methodusage.html");
+		Visualization.saveGraph(updaedIndexMap, args[1] + mining.url + "_methodusage.html");
 	}
 
-	/*
-	 * Main function for NullCheckGit_GIT_Ticket
-	 */
 	public HashMap<String, Integer> analyze() {
 		long startTime = System.currentTimeMillis();
 		ArrayList<String> allFiles = new ArrayList<>();
@@ -84,7 +66,6 @@ public class Mining {
 
 		for (String path : allFiles) {
 			if (path.endsWith(".java")) {
-				// String content = freq.readFile(path);
 				String content = this.svn.getFileContent(path, -1, new SVNProperties(), new ByteArrayOutputStream());
 				ASTNode ast = this.svn.createAst(content);
 				varTyp = countMethodCallFreqWithTypes(ast, varTyp);
@@ -176,58 +157,6 @@ public class Mining {
 		return map;
 	}
 
-	private static HashMap<String, Integer> countMethodCallFrequency(ASTNode ast, HashMap<String, Integer> freqRecord,
-			HashMap<String, String> varTypMap) {
-		// HashMap<String, Integer> freqRecord = map;
-		class MethodCallFreqVisitor extends ASTVisitor {
-			@Override
-			public boolean visit(MethodDeclaration node) {
-				String methodName = node.getName().getFullyQualifiedName().toString();
-				String entry = methodName;
-				if (!freqRecord.containsKey(entry)) {
-					freqRecord.put(entry, 0);
-				}
-				return super.visit(node);
-			}
-
-			@Override
-			public boolean visit(MethodInvocation node) {
-				String mName = node.getName().getFullyQualifiedName().toString();
-				Expression e = node.getExpression();
-				String typName = "";
-				if (e instanceof StringLiteral) {
-					typName = "string";
-				} else if (e instanceof FieldAccess) {
-					FieldAccess field = (FieldAccess) e;
-					typName = field.getName().getFullyQualifiedName();
-				} else if (e instanceof Name) {
-					typName = ((Name) e).getFullyQualifiedName();
-				}
-				if (varTypMap.containsKey(mName)) {
-					typName = varTypMap.get(mName);
-				}
-				if (freqRecord.containsKey(mName)) {
-					freqRecord.put(typName + "->" + mName, freqRecord.get(mName) + 1);
-				} else {
-					freqRecord.put(typName + "->" + mName, 1);
-				}
-				return super.visit(node);
-			}
-
-			@Override
-			public boolean visit(SuperMethodInvocation node) {
-				String mName = node.getName().getFullyQualifiedName().toString();
-				if (freqRecord.containsKey(mName)) {
-					freqRecord.put(mName, freqRecord.get(mName) + 1);
-				}
-				return true;
-			}
-		}
-		MethodCallFreqVisitor v = new MethodCallFreqVisitor();
-		ast.accept(v);
-		return freqRecord;
-	}
-
 	private static HashMap<String, Integer> countMethodCallFreq(ASTNode ast, HashMap<String, Integer> freqRecord,
 			HashMap<String, String> varTypMap) {
 		class MethodCallFreqVisitor extends ASTVisitor {
@@ -271,31 +200,4 @@ public class Mining {
 		ast.accept(v);
 		return freqRecord;
 	}
-
-	private String readFile(String path) {
-		String line = null;
-		String content = "";
-		try {
-			// FileReader reads text files in the default encoding.
-			FileReader fileReader = new FileReader(path);
-
-			// Always wrap FileReader in BufferedReader.
-			BufferedReader bufferedReader = new BufferedReader(fileReader);
-
-			while ((line = bufferedReader.readLine()) != null) {
-				content += line;
-			}
-
-			// Always close files.
-			bufferedReader.close();
-		} catch (FileNotFoundException ex) {
-			System.out.println("Unable to open file '" + path + "'");
-		} catch (IOException ex) {
-			System.out.println("Error reading file '" + path + "'");
-			// Or we could just do this:
-			// ex.printStackTrace();
-		}
-		return content;
-	}
-
 }

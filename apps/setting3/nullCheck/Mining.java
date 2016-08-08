@@ -17,10 +17,6 @@ import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
 
-/**
- * Created by nmtiwari on 7/9/16. A class to check all the Null Checks in the
- * subjected repository.
- */
 public class Mining {
 	private VCSModule git;
 	private String userName;
@@ -28,9 +24,6 @@ public class Mining {
 	private String bugURL;
 	private String product;
 
-	/*
-	 * url must be of form: username@url
-	 */
 	private Mining(String url, String path, String bug_url) {
 		this.userName = url.substring(0, url.indexOf('@'));
 		url = url.substring(url.indexOf('@') + 1);
@@ -47,13 +40,9 @@ public class Mining {
 		this.product = bug_url.substring(0, bug_url.indexOf('@'));
 	}
 
-	/*
-	 * Main function for NullCheckGit_GIT_Ticket
-	 */
 	public static void main(String[] args) {
 		long startTime = System.currentTimeMillis();
 		Mining nullCheck = null;
-		// path of the repository
 		if (args.length == 3) {
 			nullCheck = new Mining(args[1], args[0], args[2]);
 		} else {
@@ -73,39 +62,17 @@ public class Mining {
 			e.printStackTrace();
 		}
 		System.out.println("Revisions and Issues: " + totalRevs + " " + issues.size());
-
-		/*
-		 * From here the repository should comare each commit with its previous
-		 * commit to get the diffs and then find out if some null check was
-		 * added or not.
-		 */
-
-		/*
-		 * Because there are no previous commit for inital commit. We can safely
-		 * avoid the analysis of initial commit.
-		 */
-
-		/*
-		 * A loop for comparing all the commits with its previous commit.
-		 */
-
 		for (int i = totalRevs - 1; i > 0; i--) {
 			RevCommit revisionOld = revisions.get(i);
 			RevCommit revisionNew = revisions.get(i - 1);
 			try {
-				// get all the diffs of this commit from previous commit.
 				List<DiffEntry> diffs = nullCheck.git.diffsBetweenTwoRevAndChangeTypes(revisionNew, revisionOld);
-				/*
-				 * A loop for handling all the diffs fro this commit and
-				 * previous commit.
-				 */
 				String commitMsg = revisionNew.getFullMessage();
 				if (nullCheck.git.isFixingRevision(commitMsg)) {
 					fixingRevs.add(revisionNew);
 				}
 				for (DiffEntry diff : diffs) {
 					if (bugs.isFixingRevision(commitMsg, issues)) {
-						// count the added null checks.
 						int count = nullCheck.countNullCheckAdditions(revisionNew.getId(), revisionOld.getId(), diff);
 						if (count > 0) {
 							nullFixingRevs.add(revisionNew);
@@ -113,7 +80,6 @@ public class Mining {
 					}
 				}
 			} catch (RevisionSyntaxException | IOException | GitAPIException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -148,16 +114,12 @@ public class Mining {
 				e.printStackTrace();
 			}
 			if (nullInNew > nullInOld) {
-				// numOfNullCheckAdds++;
 				numOfNullCheckAdds = numOfNullCheckAdds + (nullInNew - nullInOld);
 			}
 		}
 		return numOfNullCheckAdds;
 	}
 
-	/*
-	 * Reads a file and computes the null checks.
-	 */
 	private int countNullChecks(ObjectId lastCommitId, String path) throws IOException {
 		String fileContent;
 		try {
@@ -169,9 +131,6 @@ public class Mining {
 		}
 	}
 
-	/*
-	 * Given a AST computes null check
-	 */
 	private int countNullChecks(ASTNode ast) {
 		class NullCheckConditionVisitor extends ASTVisitor {
 			private int numOfNullChecks = 0;

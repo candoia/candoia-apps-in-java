@@ -41,7 +41,6 @@ public class SVNCommit {
         this.svnId = Long.parseLong(id);
     }
 
-    // the repository the commit lives in - should already be connected!
     private final SVNRepository repository;
 
     public SVNCommit(final SVNRepository repository, VCSModule conn, SVNLogEntry entry) {
@@ -103,7 +102,6 @@ public class SVNCommit {
 					files.add(entryPath.getPath());
 				 }
 			} catch (SVNException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		 }

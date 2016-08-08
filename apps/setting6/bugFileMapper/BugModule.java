@@ -46,9 +46,6 @@ public class BugModule {
 
 	public static char[] readPassword() {
 		char[] pwd = null;
-		if (pwd != null) {
-			return pwd;
-		} else {
 			Console cnsl = null;
 			char[] password = null;
 			try {
@@ -63,7 +60,6 @@ public class BugModule {
 			}
 			pwd = password;
 			return password;
-		}
 	}
 
 	private static String readLine() throws IOException {

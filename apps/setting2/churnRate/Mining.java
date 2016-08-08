@@ -13,10 +13,6 @@ import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
 
 import setting1.churnRate.Visualization;
-
-/**
- * Created by nmtiwari on 7/24/16.
- */
 public class Mining {
 	private VCSModule svn;
 	public String url;
@@ -25,9 +21,6 @@ public class Mining {
 		this.svn = new VCSModule(repoPath);
 	}
 
-	/*
-	 * url must be of form: username@url
-	 */
 	private Mining(String url, String path) {
 		this.url = url;
 		url = url.substring(url.indexOf('@') + 1);
@@ -42,9 +35,6 @@ public class Mining {
 		this.svn = new VCSModule(path);
 	}
 
-	/*
-	 * Main function for churn rate
-	 */
 	public static void main(String[] args) {
 		long startTime = System.currentTimeMillis();
 		Mining churn = null;
@@ -57,21 +47,6 @@ public class Mining {
 
 		ArrayList<SVNCommit> revisions = churn.svn.getAllRevisions();
 		double totalRevs = revisions.size();
-
-		/*
-		 * From here the repository should comare each commit with its previous
-		 * commit to get the diffs and then find out if some null check was
-		 * added or not.
-		 */
-
-		/*
-		 * Because there are no previous commit for inital commit. We can safely
-		 * avoid the analysis of initial commit.
-		 */
-
-		/*
-		 * A loop for comparing all the commits with its previous commit.
-		 */
 		HashMap<String, Integer> churnDetails = new HashMap<>();
 		for (int i = (int) (totalRevs - 1); i > 0; i--) {
 			SVNCommit revisionOld = revisions.get(i);

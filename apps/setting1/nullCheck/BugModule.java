@@ -7,10 +7,12 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.inject.Guice;
+
 import br.ufpe.cin.groundhog.Issue;
 import br.ufpe.cin.groundhog.IssueLabel;
 import br.ufpe.cin.groundhog.Project;
@@ -33,33 +35,22 @@ public class BugModule {
 		this.builder = Guice.createInjector(new HttpModule()).getInstance(URLBuilder.class);
 	}
 
-	/*
-	 * This method reads the user password using java.util.Console service. In
-	 * some IDE's like eclipse this service is not available and creation of
-	 * console form the IDE always return null. In that very case password is
-	 * read using normal BufferedReader and input is visible as the user types
-	 * in. This is not bug but a feature not supported in some IDEs.
-	 */
 	public static char[] readPassword() {
 		char[] pwd = null;
-		if (pwd != null) {
-			return pwd;
-		} else {
-			Console cnsl = null;
-			char[] password = null;
-			try {
-				cnsl = System.console();
-				if (cnsl != null) {
-					password = cnsl.readPassword("Password: ");
-				} else {
-					return readLine().toCharArray();
-				}
-			} catch (Exception ex) {
-				ex.printStackTrace();
+		Console cnsl = null;
+		char[] password = null;
+		try {
+			cnsl = System.console();
+			if (cnsl != null) {
+				password = cnsl.readPassword("Password: ");
+			} else {
+				return readLine().toCharArray();
 			}
-			pwd = password;
-			return password;
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
+		pwd = password;
+		return password;
 	}
 
 	private static String readLine() throws IOException {
@@ -70,11 +61,6 @@ public class BugModule {
 		return reader.readLine();
 	}
 
-	/*
-	 * @issues: List of all github issues
-	 * 
-	 * @id: integer returns if id is actual bug id or not
-	 */
 	private boolean isBug(List<Issue> issues, int id) {
 		for (Issue issue : issues) {
 			if (id == issue.getNumber()) {
@@ -84,12 +70,6 @@ public class BugModule {
 		return false;
 	}
 
-	/*
-	 * @log: commit message
-	 * 
-	 * @issues: list of all issues returns a list of integers representing issue
-	 * numbers. This method gives you actual issue numbers.
-	 */
 	public List<Integer> getIssueIDsFromCommitLog(String log, List<Issue> issues) {
 		List<Integer> ids = getIdsFromCommitMsg(log);
 		List<Integer> bugs = new ArrayList<>();
@@ -101,10 +81,6 @@ public class BugModule {
 		return bugs;
 	}
 
-	/*
-	 * A simple method which fetches all the numbers from the string. Note: It
-	 * does not verify if the numbers are real bug ids or not.
-	 */
 	public List<Integer> getIdsFromCommitMsg(String commitLog) {
 		String commitMsg = commitLog;
 		commitMsg = commitMsg.replaceAll("[^0-9]+", " ");
@@ -115,16 +91,12 @@ public class BugModule {
 				if (!ids.contains(Integer.parseInt(id)))
 					ids.add(Integer.parseInt(id));
 			} catch (NumberFormatException e) {
-				 e.printStackTrace();
+				e.printStackTrace();
 			}
 		}
 		return ids;
 	}
 
-	/*
-	 * A method to get a list of issue numbers. Issue number is different than
-	 * issue id.
-	 */
 	public List<Integer> getIssueNumbers(List<Issue> issues) {
 		List<Integer> ids = new ArrayList<Integer>();
 		for (Issue issue : issues) {
@@ -133,12 +105,6 @@ public class BugModule {
 		return ids;
 	}
 
-	/*
-	 * @msg: COmmit message
-	 * 
-	 * @issues: list of all issues return boolean if this msg contains any real
-	 * bug id or not
-	 */
 	public boolean isFixingRevision(String msg, List<Issue> issues) {
 		if (VCSModule.isFixingRevision(msg)) {
 			List<Integer> ids = getIssueNumbers(issues);

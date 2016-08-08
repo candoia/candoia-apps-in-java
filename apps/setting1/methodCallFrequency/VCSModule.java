@@ -71,6 +71,8 @@ public class VCSModule {
 			while (walker.next()) {
 				results.add(this.path + "/" + walker.getPathString());
 			}
+			walk.close();
+			walker.close();
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}

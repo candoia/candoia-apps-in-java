@@ -11,10 +11,6 @@ import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNUpdateClient;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
-
-/**
- * Created by nmtiwari on 7/9/16.
- */
 public class ForgeModule {
 	public static void clone(String URL, String repoPath) throws SVNException {
 		SVNURL svnurl = SVNURL.parseURIDecoded(URL);

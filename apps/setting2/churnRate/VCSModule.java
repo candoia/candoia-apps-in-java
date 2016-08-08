@@ -28,87 +28,28 @@ public class VCSModule {
 		SVNRepositoryFactoryImpl.setup();
 		FSRepositoryFactory.setup();
 	}
-
 	private SVNRepository repository = null;
 	private SVNURL url;
-
 	private ISVNAuthenticationManager authManager;
 	private SVNClientManager clientManager = null;
-
 	private long lastSeenRevision = 1l;
 	private long latestRevision = 0l;
 
 	public VCSModule(final String url) {
-		this(url, "", "");
-	}
-
-	public VCSModule() {
-		this.url = null;
-		this.authManager = null;
-		this.repository = null;
-	}
-
-	public static boolean cloneRepo(String URL, String repoPath) {
-		try {
-			ForgeModule.clone(URL, repoPath);
-		} catch (SVNException e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-
-	public VCSModule(final String url, final String username, final String password) {
 		try {
 			this.url = SVNURL.fromFile(new File(url));
-
-			this.authManager = SVNWCUtil.createDefaultAuthenticationManager(username, password);
-
-			this.repository = SVNRepositoryFactory.create(this.url);
-			this.repository.setAuthenticationManager(this.authManager);
-
-			this.latestRevision = this.repository.getLatestRevision();
-		} catch (final SVNException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public void close() {
-		repository.closeSession();
-	}
-
-	public boolean clear() {
-		this.close();
-		return true;
-	}
-
-	public boolean initialize(String path) {
-		try {
-			this.url = SVNURL.parseURIEncoded("file:///" + path);
 			this.authManager = SVNWCUtil.createDefaultAuthenticationManager("", "");
 			this.repository = SVNRepositoryFactory.create(this.url);
 			this.repository.setAuthenticationManager(this.authManager);
 			this.latestRevision = this.repository.getLatestRevision();
 		} catch (final SVNException e) {
 			e.printStackTrace();
-			return false;
 		}
-		return true;
-	}
-
-	public String getLastCommitId() {
-		if (latestRevision == 0l)
-			return null;
-		return "" + latestRevision;
-	}
-
-	public void setLastSeenCommitId(final String id) {
-		lastSeenRevision = Long.parseLong(id);
 	}
 
 	public ArrayList<SVNCommit> getAllRevisions() {
 		if (latestRevision < 1l)
 			return revisions;
-
 		try {
 			final Collection<SVNLogEntry> logEntries = repository.log(new String[] { "" }, null, lastSeenRevision + 1l,
 					latestRevision, true, true);
@@ -154,10 +95,6 @@ public class VCSModule {
 		return revisions;
 	}
 
-	public SVNRepository getRepository() {
-		return this.repository;
-	}
-
 	public ArrayList<SVNLogEntry> diffsBetweenTwoRevAndChangeTypes(SVNCommit revisionNew, SVNCommit revisionOld) {
 		try {
 			repository.setAuthenticationManager(authManager);
@@ -175,6 +112,5 @@ public class VCSModule {
 			e.printStackTrace();
 			return null;
 		}
-
 	}
 }

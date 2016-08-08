@@ -111,5 +111,4 @@ public class Mining {
 		br.append("@DATA\n");
 		return br.toString();
 	}
-
 }
