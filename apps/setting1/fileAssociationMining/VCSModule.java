@@ -55,18 +55,6 @@ public class VCSModule {
 		return revisions;
 	}
 
-	public List<DiffEntry> diffsBetweenTwoRevAndChangeTypes(RevCommit cur, RevCommit prev)
-			throws RevisionSyntaxException, IOException, GitAPIException {
-		List<DiffEntry> diffs = new ArrayList<>();
-		ObjectReader reader = this.repository.newObjectReader();
-		CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
-		oldTreeIter.reset(reader, prev.getTree());
-		CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
-		newTreeIter.reset(reader, cur.getTree());
-		diffs = this.git.diff().setNewTree(newTreeIter).setOldTree(oldTreeIter).call();
-		return diffs;
-	}
-
 	public List<String> readElementsAt(Repository repository, String commit) throws IOException {
 		RevWalk revWalk = new RevWalk(repository);
 		RevCommit revCommit = revWalk.parseCommit(ObjectId.fromString(commit));
@@ -79,6 +67,8 @@ public class VCSModule {
 		while (treeWalk.next()) {
 			items.add(treeWalk.getPathString());
 		}
+		treeWalk.close();
+		revWalk.close();
 		return items;
 	}
 }

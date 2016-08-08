@@ -9,16 +9,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
-/**
- * Created by nmtiwari on 7/20/16.
- */
 public class Mining {
 	private VCSModule git;
 	public String url;
 
-	/*
-	 * url must be of form: username@url
-	 */
 	private Mining(String url, String path) {
 		this.url = url;
 		url = url.substring(url.indexOf('@') + 1);
@@ -26,7 +20,6 @@ public class Mining {
 			try {
 				ForgeModule.clone(url, path);
 			} catch (IOException | GitAPIException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -34,9 +27,6 @@ public class Mining {
 		this.git = new VCSModule(path);
 	}
 
-	/*
-	 * Main function for NullCheckGit_GIT_Ticket
-	 */
 	public static void main(String[] args) {
 		Mining mining = new Mining(args[0], args[1]);
 		HashMap<String, Integer> indexMap = mining.analyze();
@@ -51,14 +41,10 @@ public class Mining {
 		Visualization.saveGraph(results, args[1] + "_methodCallFrequency.html");
 	}
 
-	/*
-	 * Main function for NullCheckGit_GIT_Ticket
-	 */
 	public HashMap<String, Integer> analyze() {
 		List<String> allFiles = this.git.getAllFilesFromHeadWithAbsPath();
 		HashMap<String, Integer> indexMap = new HashMap<String, Integer>();
 		HashMap<String, String> varTyp = new HashMap<String, String>();
-
 		for (String path : allFiles) {
 			if (path.endsWith(".java")) {
 				String content = this.readFile(path);
@@ -146,57 +132,6 @@ public class Mining {
 		return map;
 	}
 
-	private static HashMap<String, Integer> countMethodCallFrequency(ASTNode ast, HashMap<String, Integer> freqRecord,
-			HashMap<String, String> varTypMap) {
-		// HashMap<String, Integer> freqRecord = map;
-		class MethodCallFreqVisitor extends ASTVisitor {
-			@Override
-			public boolean visit(MethodDeclaration node) {
-				String methodName = node.getName().getFullyQualifiedName().toString();
-				String entry = methodName;
-				if (!freqRecord.containsKey(entry)) {
-					freqRecord.put(entry, 0);
-				}
-				return super.visit(node);
-			}
-
-			@Override
-			public boolean visit(MethodInvocation node) {
-				String mName = node.getName().getFullyQualifiedName().toString();
-				Expression e = node.getExpression();
-				String typName = "";
-				if (e instanceof StringLiteral) {
-					typName = "string";
-				} else if (e instanceof FieldAccess) {
-					FieldAccess field = (FieldAccess) e;
-					typName = field.getName().getFullyQualifiedName();
-				} else if (e instanceof Name) {
-					typName = ((Name) e).getFullyQualifiedName();
-				}
-				if (varTypMap.containsKey(mName)) {
-					typName = varTypMap.get(mName);
-				}
-				if (freqRecord.containsKey(mName)) {
-					freqRecord.put(typName + "->" + mName, freqRecord.get(mName) + 1);
-				} else {
-					freqRecord.put(typName + "->" + mName, 1);
-				}
-				return super.visit(node);
-			}
-
-			@Override
-			public boolean visit(SuperMethodInvocation node) {
-				String mName = node.getName().getFullyQualifiedName().toString();
-				if (freqRecord.containsKey(mName)) {
-					freqRecord.put(mName, freqRecord.get(mName) + 1);
-				}
-				return true;
-			}
-		}
-		MethodCallFreqVisitor v = new MethodCallFreqVisitor();
-		ast.accept(v);
-		return freqRecord;
-	}
 
 	private static HashMap<String, Integer> countMethodCallFreq(ASTNode ast, HashMap<String, Integer> freqRecord,
 			HashMap<String, String> varTypMap) {
@@ -245,26 +180,17 @@ public class Mining {
 		String line = null;
 		String content = "";
 		try {
-			// FileReader reads text files in the default encoding.
 			FileReader fileReader = new FileReader(path);
-
-			// Always wrap FileReader in BufferedReader.
 			BufferedReader bufferedReader = new BufferedReader(fileReader);
-
 			while ((line = bufferedReader.readLine()) != null) {
 				content += line;
 			}
-
-			// Always close files.
 			bufferedReader.close();
 		} catch (FileNotFoundException ex) {
 			System.out.println("Unable to open file '" + path + "'");
 		} catch (IOException ex) {
 			System.out.println("Error reading file '" + path + "'");
-			// Or we could just do this:
-			// ex.printStackTrace();
 		}
 		return content;
 	}
-
 }

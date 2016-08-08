@@ -32,17 +32,6 @@ public class BugModule {
 		return issues;
 	}
 
-	public static void main(String[] args) {
-		BugModule b4jimporter = new BugModule();
-		String url = "https://bz.apache.org/bugzilla/";
-		String product = "Tomcat 8";
-		try {
-			b4jimporter.importBugs(url, product);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
 	public static List<b4j.core.Issue> getIssuesWithBuilder(String url, String product) {
 		String temp = product;
 		List<b4j.core.Issue> issues = new ArrayList<>();

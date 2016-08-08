@@ -1,24 +1,14 @@
 package setting2.fileAssocaition;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.tmatesoft.svn.core.SVNDirEntry;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
 import org.tmatesoft.svn.core.SVNNodeKind;
-import org.tmatesoft.svn.core.SVNProperties;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.auth.ISVNAuthenticationManager;
 import org.tmatesoft.svn.core.internal.io.dav.DAVRepositoryFactory;
@@ -29,10 +19,6 @@ import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
-/**
- * @author hoan
- * @author rdyer
- */
 public class VCSModule {
 	protected ArrayList<SVNCommit> revisions = new ArrayList<SVNCommit>();
 	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
@@ -41,16 +27,12 @@ public class VCSModule {
 		SVNRepositoryFactoryImpl.setup();
 		FSRepositoryFactory.setup();
 	}
-
 	private SVNRepository repository = null;
 	private SVNURL url;
-
 	private ISVNAuthenticationManager authManager;
 	private SVNClientManager clientManager = null;
-
 	private long lastSeenRevision = 1l;
 	private long latestRevision = 0l;
-
 	public VCSModule(final String url) {
 		try {
 			this.url = SVNURL.fromFile(new File(url));
@@ -103,7 +85,6 @@ public class VCSModule {
 					revision.setRemovedPaths(rRemovedPaths);
 					revision.setAddedPaths(rAddedPaths);
 				}
-
 				this.revisions.add(revision);
 			}
 		} catch (final SVNException e) {
@@ -112,26 +93,7 @@ public class VCSModule {
 		return revisions;
 	}
 
-	public ASTNode createAst(String fileContent) {
-		Map<String, String> options = JavaCore.getOptions();
-		options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-		options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
-		options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
-		ASTParser parser = ASTParser.newParser(AST.JLS3);
-		parser.setSource(fileContent.toCharArray());
-		parser.setCompilerOptions(options);
-		try {
-			ASTNode ast = parser.createAST(null);
-			return ast;
-		} catch (Exception e) {
-			parser.setSource(" ".toCharArray());
-			ASTNode ast = parser.createAST(null);
-			return ast;
-		}
-	}
-
 	public SVNRepository getRepository() {
 		return this.repository;
 	}
-
 }

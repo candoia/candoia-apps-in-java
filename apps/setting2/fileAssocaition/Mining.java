@@ -10,14 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.tmatesoft.svn.core.SVNException;
-
-/**
- * Created by nmtiwari on 7/19/16. FileAssociationMining_GIT: A class for
- * getting file associations between revisions
- * 
- * @username: github username for project owner
- * @projName: project name
- */
 public class Mining {
 	public String url;
 	private VCSModule svn;
@@ -30,7 +22,6 @@ public class Mining {
 			try {
 				ForgeModule.clone(url, path);
 			} catch (SVNException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -127,5 +118,4 @@ public class Mining {
 		br.append("@DATA\n");
 		return br.toString();
 	}
-
 }

@@ -34,46 +34,25 @@ import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
 import br.ufpe.cin.groundhog.http.Requests;
-
-/**
- * @author hoan
- * @author rdyer
- */
 public class VCSModule {
 	protected ArrayList<SVNCommit> revisions = new ArrayList<SVNCommit>();
 	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
 	static {
-		// For using over http:// and https://
 		DAVRepositoryFactory.setup();
-		// For using over svn:// and svn+xxx://
 		SVNRepositoryFactoryImpl.setup();
-		// For using over file:///
 		FSRepositoryFactory.setup();
 	}
-
 	private SVNRepository repository = null;
 	private SVNURL url;
-
 	private ISVNAuthenticationManager authManager;
 	private SVNClientManager clientManager = null;
-
 	private long lastSeenRevision = 1l;
 	private long latestRevision = 0l;
 
 	public VCSModule(final String url) {
-		this(url, "", "");
-	}
-
-	public VCSModule() {
-		this.url = null;
-		this.authManager = null;
-		this.repository = null;
-	}
-
-	public VCSModule(final String url, final String username, final String password) {
 		try {
 			this.url = SVNURL.fromFile(new File(url));
-			this.authManager = SVNWCUtil.createDefaultAuthenticationManager(username, password);
+			this.authManager = SVNWCUtil.createDefaultAuthenticationManager("", "");
 			this.repository = SVNRepositoryFactory.create(this.url);
 			this.repository.setAuthenticationManager(this.authManager);
 			this.latestRevision = this.repository.getLatestRevision();
@@ -81,6 +60,7 @@ public class VCSModule {
 			e.printStackTrace();
 		}
 	}
+
 
 	public ArrayList<SVNCommit> getAllRevisions() {
 		if (latestRevision < 1l)
@@ -179,8 +159,6 @@ public class VCSModule {
 			this.repository.getFile(filePath, revisionId, svnProperties, os);
 			return os.toString();
 		} catch (SVNException e) {
-			// TODO Auto-generated catch block
-			// e.printStackTrace();
 		}
 		return "";
 	}

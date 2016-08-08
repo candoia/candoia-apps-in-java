@@ -82,6 +82,8 @@ public class VCSModule {
 		while (treeWalk.next()) {
 			items.add(treeWalk.getPathString());
 		}
+		treeWalk.close();
+		revWalk.close();
 		return items;
 	}
 }

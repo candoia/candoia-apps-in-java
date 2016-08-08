@@ -19,10 +19,6 @@ import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
 import org.tmatesoft.svn.core.SVNProperties;
 
-/**
- * Created by nmtiwari on 7/9/16. A class to check all the Null Checks in the
- * subjected repository.
- */
 public class Mining {
 	private String userName;
 	private String projName;

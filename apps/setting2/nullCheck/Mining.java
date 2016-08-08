@@ -30,14 +30,6 @@ public class Mining {
 	private String bugURL;
 	private String product;
 
-	private Mining(String repoPath, String bug_url) {
-		this.svn = new VCSModule(repoPath);
-		String[] details = repoPath.split("/");
-		this.projName = details[details.length - 1];
-		this.userName = details[details.length - 2];
-		this.bugURL = bug_url.substring(bug_url.indexOf('@') + 1);
-		this.product = bug_url.substring(0, bug_url.indexOf('@'));
-	}
 
 	private Mining(String url, String path, String bug_url) {
 		this.userName = url.substring(0, url.indexOf('@'));
@@ -61,8 +53,7 @@ public class Mining {
 		if (args.length == 3) {
 			nullCheck = new Mining(args[0], args[1], args[2]);
 		} else {
-			nullCheck = new Mining("/Users/nmtiwari/Desktop/test/pagal/paninij",
-					"Tomcat 8@https://bz.apache.org/bugzilla");
+			throw new IllegalArgumentException();
 		}
 
 		ArrayList<SVNCommit> revisions = nullCheck.svn.getAllRevisions();

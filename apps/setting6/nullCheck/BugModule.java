@@ -1,4 +1,4 @@
-package setting1.bugFileMapper;
+package setting6.nullCheck;
 
 import java.io.BufferedReader;
 import java.io.Console;
@@ -7,10 +7,12 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.inject.Guice;
+
 import br.ufpe.cin.groundhog.Issue;
 import br.ufpe.cin.groundhog.IssueLabel;
 import br.ufpe.cin.groundhog.Project;
@@ -35,20 +37,20 @@ public class BugModule {
 
 	public static char[] readPassword() {
 		char[] pwd = null;
-			Console cnsl = null;
-			char[] password = null;
-			try {
-				cnsl = System.console();
-				if (cnsl != null) {
-					password = cnsl.readPassword("Password: ");
-				} else {
-					return readLine().toCharArray();
-				}
-			} catch (Exception ex) {
-				ex.printStackTrace();
+		Console cnsl = null;
+		char[] password = null;
+		try {
+			cnsl = System.console();
+			if (cnsl != null) {
+				password = cnsl.readPassword("Password: ");
+			} else {
+				return readLine().toCharArray();
 			}
-			pwd = password;
-			return password;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		pwd = password;
+		return password;
 	}
 
 	private static String readLine() throws IOException {
@@ -58,6 +60,7 @@ public class BugModule {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		return reader.readLine();
 	}
+
 	private boolean isBug(List<Issue> issues, int id) {
 		for (Issue issue : issues) {
 			if (id == issue.getNumber()) {
@@ -66,6 +69,7 @@ public class BugModule {
 		}
 		return false;
 	}
+
 	public List<Integer> getIssueIDsFromCommitLog(String log, List<Issue> issues) {
 		List<Integer> ids = getIdsFromCommitMsg(log);
 		List<Integer> bugs = new ArrayList<>();
@@ -87,11 +91,12 @@ public class BugModule {
 				if (!ids.contains(Integer.parseInt(id)))
 					ids.add(Integer.parseInt(id));
 			} catch (NumberFormatException e) {
-				 e.printStackTrace();
+				e.printStackTrace();
 			}
 		}
 		return ids;
 	}
+
 	public List<Integer> getIssueNumbers(List<Issue> issues) {
 		List<Integer> ids = new ArrayList<Integer>();
 		for (Issue issue : issues) {

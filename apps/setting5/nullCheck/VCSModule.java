@@ -34,11 +34,6 @@ import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
 import br.ufpe.cin.groundhog.http.Requests;
-
-/**
- * @author hoan
- * @author rdyer
- */
 public class VCSModule {
 	protected ArrayList<SVNCommit> revisions = new ArrayList<SVNCommit>();
 	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
@@ -166,8 +161,7 @@ public class VCSModule {
 			this.repository.getFile(filePath, revisionId, svnProperties, os);
 			return os.toString();
 		} catch (SVNException e) {
-			// TODO Auto-generated catch block
-			// e.printStackTrace();
+			 e.printStackTrace();
 		}
 		return "";
 	}
