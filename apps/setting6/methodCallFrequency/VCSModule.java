@@ -26,41 +26,16 @@ import org.eclipse.wst.jsdt.core.dom.ASTNode;
 import org.eclipse.wst.jsdt.core.dom.ASTParser;
 
 public class VCSModule {
-	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
-	private FileRepositoryBuilder builder;
 	private Repository repository;
-	private Git git;
 	private String path;
 
 	public VCSModule(String path) {
-		this.builder = new FileRepositoryBuilder();
 		this.path = path;
 		try {
-			this.repository = this.builder.setGitDir(new File(path + "/.git")).setMustExist(true).build();
-			this.git = new Git(this.repository);
+			this.repository = new FileRepositoryBuilder().setGitDir(new File(path + "/.git")).setMustExist(true).build();
 		} catch (java.io.IOException e) {
 			e.printStackTrace();
 		}
-	}
-
-	public Repository getRepository() {
-		return this.repository;
-	}
-
-	public ArrayList<RevCommit> getAllRevisions() {
-		ArrayList<RevCommit> revisions = new ArrayList<>();
-
-		Iterable<RevCommit> allRevisions = null;
-		try {
-			allRevisions = git.log().call();
-		} catch (GitAPIException e) {
-			e.printStackTrace();
-		}
-
-		for (RevCommit rev : allRevisions) {
-			revisions.add(rev);
-		}
-		return revisions;
 	}
 
 	public ASTNode createAst(String fileContent) {

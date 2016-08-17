@@ -20,8 +20,6 @@ public class Mining {
 	private String userName;
 	private String projName;
 	private HashMap<String, List<Integer>> fileBugIndex;
-	private String bugURL;
-	private String product;
 
 	/*
 	 * url must be of form: username@url
@@ -37,8 +35,6 @@ public class Mining {
 			e.printStackTrace();
 		}
 		this.git = new VCSModule(path);
-		this.bugURL = bug_url.substring(bug_url.indexOf('@') + 1);
-		this.product = bug_url.substring(0, bug_url.indexOf('@'));
 		fileBugIndex = new HashMap<>();
 	}
 
@@ -46,8 +42,6 @@ public class Mining {
 	 * Main function for FileAssociation Mining
 	 */
 	public static void main(String[] args) {
-		long startTime = System.currentTimeMillis();
-		int index = 0;
 		Mining bugsrcMapper = null;
 		// path of the repository
 		if (args.length == 3) {
@@ -62,7 +56,6 @@ public class Mining {
 		// get all the issues of the projects.
 		BugModule bugs = new BugModule();
 		List<SVNTicket> issues = new ArrayList<>();
-		System.out.println(bugsrcMapper.bugURL + "\n" + bugsrcMapper.product);
 		try {
 			issues = bugs.getIssues(bugsrcMapper.userName, bugsrcMapper.projName);
 		} catch (Exception e) {
@@ -104,9 +97,7 @@ public class Mining {
 		}
 
 		// print all the values
-		System.out.println(issues.toString());
 		HashMap<String, Integer> bugCounter = new HashMap<>();
-		System.out.println("Total buggy files: " + bugsrcMapper.fileBugIndex.size());
 		for (String name : bugsrcMapper.fileBugIndex.keySet()) {
 			int count = bugsrcMapper.fileBugIndex.get(name).size();
 			System.out.println(name + " -> " + count);

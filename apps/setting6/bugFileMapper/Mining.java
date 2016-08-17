@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import setting3.bugFileMapper.BugModule;;
 
 /**
  * Created by nmtiwari on 7/20/16. A class for mapping the files with bugs. This
@@ -17,8 +17,6 @@ import setting3.bugFileMapper.BugModule;;
  */
 public class Mining {
 	private VCSModule git;
-	private String userName;
-	private String projName;
 	private HashMap<String, List<Integer>> fileBugIndex;
 	private String bugURL;
 	private String product;
@@ -27,9 +25,7 @@ public class Mining {
 	 * url must be of form: username@url
 	 */
 	public Mining(String url, String path, String bug_url) {
-		this.userName = url.substring(0, url.indexOf('@'));
 		url = url.substring(url.indexOf('@') + 1);
-		this.projName = url.substring(url.lastIndexOf('/') + 1);
 		try {
 			ForgeModule.clone(url, path);
 		} catch (IOException | GitAPIException e) {
@@ -46,8 +42,6 @@ public class Mining {
 	 * Main function for FileAssociation Mining
 	 */
 	public static void main(String[] args) {
-		long startTime = System.currentTimeMillis();
-		int index = 0;
 		Mining bugsrcMapper = null;
 		// path of the repository
 		if (args.length == 3) {
@@ -61,10 +55,9 @@ public class Mining {
 		int totalRevs = revisions.size();
 		// get all the issues of the projects.
 		BugModule bugs = new BugModule(bugsrcMapper.bugURL, bugsrcMapper.product);
-		List<b4j.core.Issue> issues = new ArrayList<>();
-		System.out.println(bugsrcMapper.bugURL + "\n" + bugsrcMapper.product);
+		List<br.ufpe.cin.groundhog.Issue> issues = new ArrayList<>();
 		try {
-			issues = bugs.importJiraIssues();
+			issues = bugs.getIssues();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -103,10 +96,7 @@ public class Mining {
 
 		}
 
-		// print all the values
-		System.out.println(issues.toString());
 		HashMap<String, Integer> bugCounter = new HashMap<>();
-		System.out.println("Total buggy files: " + bugsrcMapper.fileBugIndex.size());
 		for (String name : bugsrcMapper.fileBugIndex.keySet()) {
 			int count = bugsrcMapper.fileBugIndex.get(name).size();
 			System.out.println(name + " -> " + count);

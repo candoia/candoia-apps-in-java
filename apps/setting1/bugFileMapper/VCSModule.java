@@ -1,11 +1,5 @@
 package setting1.bugFileMapper;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
@@ -16,18 +10,21 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class VCSModule {
 	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
-	private FileRepositoryBuilder builder;
 	private Repository repository;
 	private Git git;
-	private String path;
 
 	public VCSModule(String path) {
-		this.builder = new FileRepositoryBuilder();
-		this.path = path;
 		try {
-			this.repository = this.builder.setGitDir(new File(path + "/.git")).setMustExist(true).build();
+			this.repository = new FileRepositoryBuilder().setGitDir(new File(path + "/.git")).setMustExist(true).build();
 			this.git = new Git(this.repository);
 		} catch (java.io.IOException e) {
 			e.printStackTrace();

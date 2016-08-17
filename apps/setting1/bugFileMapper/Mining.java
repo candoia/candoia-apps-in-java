@@ -1,17 +1,15 @@
 package setting1.bugFileMapper;
 
+import br.ufpe.cin.groundhog.Issue;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-
-import br.ufpe.cin.groundhog.Issue;
-import setting1.bugFileMapper.VCSModule;
 
 /**
  * Created by nmtiwari on 7/20/16. A class for mapping the files with bugs. This
@@ -42,8 +40,6 @@ public class Mining {
 	}
 
 	public static void main(String[] args) {
-		long startTime = System.currentTimeMillis();
-		int index = 0;
 		Mining bugsrcMapper = null;
 		if (args.length == 2) {
 			bugsrcMapper = new Mining(args[0], args[1]);
@@ -78,9 +74,7 @@ public class Mining {
 
 		}
 
-		System.out.println(issues.toString());
 		HashMap<String, Integer> bugCounter = new HashMap<>();
-		System.out.println("Total buggy files: " + bugsrcMapper.fileBugIndex.size());
 		for (String name : bugsrcMapper.fileBugIndex.keySet()) {
 			int count = bugsrcMapper.fileBugIndex.get(name).size();
 			System.out.println(name + " -> " + count);

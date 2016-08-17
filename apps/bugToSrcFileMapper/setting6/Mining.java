@@ -20,8 +20,6 @@ import java.util.List;
  */
 public class Mining {
 	private VCSModule git;
-	private String userName;
-	private String projName;
 	private HashMap<String, List<Integer>> fileBugIndex;
 	private String bugURL;
 	private String product;
@@ -30,9 +28,7 @@ public class Mining {
 	 * url must be of form: username@url
 	 */
 	public Mining(String url, String path, String bug_url) {
-		this.userName = url.substring(0, url.indexOf('@'));
 		url = url.substring(url.indexOf('@') + 1);
-		this.projName = url.substring(url.lastIndexOf('/') + 1);
 		try {
 			ForgeModule.clone(url, path);
 		} catch (IOException | GitAPIException e) {
@@ -49,8 +45,6 @@ public class Mining {
 	 * Main function for FileAssociation Mining
 	 */
 	public static void main(String[] args) {
-		long startTime = System.currentTimeMillis();
-		int index = 0;
 		Mining bugsrcMapper = null;
 		// path of the repository
 		if (args.length == 3) {
@@ -67,9 +61,8 @@ public class Mining {
 		List<b4j.core.Issue> issues = new ArrayList<>();
 		System.out.println(bugsrcMapper.bugURL + "\n" + bugsrcMapper.product);
 		try {
-			issues = bugs.importJiraIssues();
+			issues = bugs.getIssues();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -107,9 +100,7 @@ public class Mining {
 		}
 
 		// print all the values
-		System.out.println(issues.toString());
 		HashMap<String, Integer> bugCounter = new HashMap<>();
-		System.out.println("Total buggy files: " + bugsrcMapper.fileBugIndex.size());
 		for (String name : bugsrcMapper.fileBugIndex.keySet()) {
 			int count = bugsrcMapper.fileBugIndex.get(name).size();
 			System.out.println(name + " -> " + count);
