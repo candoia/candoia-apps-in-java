@@ -1,4 +1,15 @@
-package setting1.bugFileMapper;
+package customizations.bugsrcmapper.issueNumberToRevDateTime;
+
+import br.ufpe.cin.groundhog.Issue;
+import br.ufpe.cin.groundhog.IssueLabel;
+import br.ufpe.cin.groundhog.Project;
+import br.ufpe.cin.groundhog.User;
+import br.ufpe.cin.groundhog.http.HttpModule;
+import br.ufpe.cin.groundhog.http.Requests;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.inject.Guice;
 
 import java.io.BufferedReader;
 import java.io.Console;
@@ -7,16 +18,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.inject.Guice;
-import br.ufpe.cin.groundhog.Issue;
-import br.ufpe.cin.groundhog.IssueLabel;
-import br.ufpe.cin.groundhog.Project;
-import br.ufpe.cin.groundhog.User;
-import br.ufpe.cin.groundhog.http.HttpModule;
-import br.ufpe.cin.groundhog.http.Requests;
 
 public class BugModule {
 	private Project project;
@@ -80,10 +81,10 @@ public class BugModule {
 		List<Integer> ids = new ArrayList<Integer>();
 		for (String id : idAsString) {
 			try {
-				if (!ids.contains(Integer.parseInt(id)))
+				if (id.trim().length() > 0 && !ids.contains(Integer.parseInt(id)))
 					ids.add(Integer.parseInt(id));
 			} catch (NumberFormatException e) {
-				 //e.printStackTrace();
+				 e.printStackTrace();
 			}
 		}
 		return ids;
@@ -135,7 +136,7 @@ public class BugModule {
 						issues.add(issue);
 						lables.clear();
 					}
-				} catch (java.lang.ClassCastException e) {
+				} catch (ClassCastException e) {
 					JsonElement element = gson.fromJson(jsonString, JsonElement.class);
 					Issue issue = gson.fromJson(element, Issue.class);
 					issue.setProject(project);
@@ -145,7 +146,7 @@ public class BugModule {
 							lables.add(label);
 						}
 
-					} catch (java.lang.NullPointerException ex) {
+					} catch (NullPointerException ex) {
 						ex.printStackTrace();
 					}
 					issue.setLabels(lables);

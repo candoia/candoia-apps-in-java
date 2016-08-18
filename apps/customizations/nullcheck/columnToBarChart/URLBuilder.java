@@ -1,4 +1,4 @@
-package setting1.customization.nullCheck_buglife;
+package customizations.nullcheck.columnToBarChart;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

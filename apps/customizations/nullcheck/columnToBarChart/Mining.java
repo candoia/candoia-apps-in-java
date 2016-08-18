@@ -1,4 +1,4 @@
-package setting1.nullCheck;
+package customizations.nullcheck.columnToBarChart;
 
 import br.ufpe.cin.groundhog.Issue;
 import setting1.bugFileMapper.BugModule;
@@ -79,6 +79,7 @@ public class Mining {
 		result.put("fixing revisions", fixingRevs.size());
 		result.put("Null fixing revisions", nullFixingRevs.size());
 		Visualization.saveGraph(result, "/Users/nmtiwari/Desktop/null.html");
+		System.out.println("Time: " + (endTime - startTime) / 1000.000);
 	}
 
 	private int countNullCheckAdditions(ObjectId lastCommitId, ObjectId oldCommit, DiffEntry diff) {

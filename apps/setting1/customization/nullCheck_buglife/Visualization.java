@@ -33,7 +33,7 @@ public class Visualization {
     private static String headerE = " ]);";
 
     private static String convert(HashMap<String, Integer> map) {
-        String result = "['METHOD', 'NUMBER OF USAGE'],";
+        String result = "['METHOD', '# Weeks in Open status'],";
         for (String k : map.keySet()) {
             result += "['" + k + "', " + map.get(k) + "],\n";
         }

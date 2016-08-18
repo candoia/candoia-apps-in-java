@@ -1,4 +1,4 @@
-package setting1.customization.nullCheck_buglife;
+package customizations.nullcheck.columnToBarChart;
 
 import java.util.ArrayList;
 import java.util.List;
