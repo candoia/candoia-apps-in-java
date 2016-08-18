@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class ForgeModule {
-
+	public static String oaToken = null;
 	public static boolean clone(String URL, String localpaths) throws IOException, GitAPIException {
 		File localPath = new File(localpaths);
 		if (!localPath.exists())

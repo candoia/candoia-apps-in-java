@@ -7,7 +7,6 @@ import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
-import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
 import java.io.File;
@@ -15,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class VCSModule {
 	protected ArrayList<SVNCommit> revisions = new ArrayList<SVNCommit>();
@@ -28,7 +29,6 @@ public class VCSModule {
 	private SVNRepository repository = null;
 	private SVNURL url;
 	private ISVNAuthenticationManager authManager;
-	private SVNClientManager clientManager = null;
 	private long lastSeenRevision = 1l;
 	private long latestRevision = 0l;
 
@@ -92,7 +92,21 @@ public class VCSModule {
 		return revisions;
 	}
 
-	public SVNRepository getRepository() {
-		return this.repository;
+	public static boolean isFixingRevision(String commitLog) {
+		boolean isFixing = false;
+		Pattern p;
+		if (commitLog != null) {
+			String tmpLog = commitLog.toLowerCase();
+			for (int i = 0; i < fixingPatterns.length; i++) {
+				String patternStr = fixingPatterns[i];
+				p = Pattern.compile(patternStr);
+				Matcher m = p.matcher(tmpLog);
+				isFixing = m.find();
+				if (isFixing) {
+					break;
+				}
+			}
+		}
+		return isFixing;
 	}
 }

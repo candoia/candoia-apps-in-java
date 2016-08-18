@@ -17,60 +17,22 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Created by nmtiwari on 7/9/16.
- * This is class for handling git connections and cloning from repo
- */
 public class VCSModule {
-	// patters to check if fixings
 	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
-	private FileRepositoryBuilder builder;
 	private Repository repository;
 	private Git git;
-	private String path;
 
 	public VCSModule(String path) {
-		this.builder = new FileRepositoryBuilder();
-		this.path = path;
 		try {
-			this.repository = this.builder.setGitDir(new File(path + "/.git")).setMustExist(true).build();
+			this.repository = new FileRepositoryBuilder().setGitDir(new File(path + "/.git")).setMustExist(true).build();
 			this.git = new Git(this.repository);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-
-	public ArrayList<RevCommit> getAllRevisions() {
-		ArrayList<RevCommit> revisions = new ArrayList<>();
-
-		Iterable<RevCommit> allRevisions = null;
-		try {
-			allRevisions = git.log().call();
-		} catch (GitAPIException e) {
-			e.printStackTrace();
-		}
-
-		for (RevCommit rev : allRevisions) {
-			revisions.add(rev);
-		}
-		return revisions;
-	}
-	public List<String> readElementsAt(Repository repository, String commit) throws IOException {
-		RevWalk revWalk = new RevWalk(repository);
-		RevCommit revCommit = revWalk.parseCommit(ObjectId.fromString(commit));
-		RevTree tree = revCommit.getTree();
-		List<String> items = new ArrayList<>();
-		TreeWalk treeWalk = new TreeWalk(repository);
-		treeWalk.addTree(tree);
-		treeWalk.setRecursive(true);
-		treeWalk.setPostOrderTraversal(true);
-		while (treeWalk.next()) {
-			items.add(treeWalk.getPathString());
-		}
-		treeWalk.close();
-		revWalk.close();
-		return items;
+	public Repository getRepository() {
+		return this.repository;
 	}
 
 	public static boolean isFixingRevision(String commitLog) {
@@ -91,8 +53,34 @@ public class VCSModule {
 		return isFixing;
 	}
 
+	public ArrayList<RevCommit> getAllRevisions() {
+		ArrayList<RevCommit> revisions = new ArrayList<>();
+		Iterable<RevCommit> allRevisions = null;
+		try {
+			allRevisions = git.log().call();
+		} catch (GitAPIException e) {
+			e.printStackTrace();
+		}
+		for (RevCommit rev : allRevisions) {
+			revisions.add(rev);
+		}
+		return revisions;
+	}
 
-	public Repository getRepository() {
-	  return this.repository;
+	public List<String> readElementsAt(Repository repository, String commit) throws IOException {
+		RevWalk revWalk = new RevWalk(repository);
+		RevCommit revCommit = revWalk.parseCommit(ObjectId.fromString(commit));
+		RevTree tree = revCommit.getTree();
+		List<String> items = new ArrayList<>();
+		TreeWalk treeWalk = new TreeWalk(repository);
+		treeWalk.addTree(tree);
+		treeWalk.setRecursive(true);
+		treeWalk.setPostOrderTraversal(true);
+		while (treeWalk.next()) {
+			items.add(treeWalk.getPathString());
+		}
+		treeWalk.close();
+		revWalk.close();
+		return items;
 	}
 }

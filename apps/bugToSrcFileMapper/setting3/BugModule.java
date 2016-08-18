@@ -12,21 +12,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class BugModule{
 	static int ids = 0;
 	private String url;
 	private String product;
-	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
 	
 	public BugModule(String url, String product){
 		this.url = url;
 		this.product = product;
 	}
 
-	public final List<Issue> importJiraIssues() {
+	public final List<Issue> getIssues() {
 		List<Issue> issues = new ArrayList<>();
 		AbstractHttpSession session = new JiraRpcSession();
 		try {
@@ -60,12 +57,6 @@ public class BugModule{
 			session.close();
 			return new ArrayList<>();
 		}
-	}
-
-
-	public static void main(String[] args) {
-		BugModule jira = new BugModule("https://issues.apache.org/jira/","HADOOP");
-		jira.importJiraIssues();
 	}
 
 	public List<Integer> getIssueIDsFromCommitLog(String log, List<Issue> issues) {
@@ -113,7 +104,7 @@ public class BugModule{
 	}
 
 	public boolean isFixingRevision(String msg, List<Issue> issues) {
-		if (isFixingRevision(msg)) {
+		if (VCSModule.isFixingRevision(msg)) {
 			List<String> ids = getIssueNumbers(issues);
 			List<Integer> bugs = getIdsFromCommitMsg(msg);
 			for (Integer i : bugs) {
@@ -123,23 +114,5 @@ public class BugModule{
 			}
 		}
 		return false;
-	}
-	
-	public boolean isFixingRevision(String commitLog) {
-		boolean isFixing = false;
-		Pattern p;
-		if (commitLog != null) {
-			String tmpLog = commitLog.toLowerCase();
-			for (int i = 0; i < fixingPatterns.length; i++) {
-				String patternStr = fixingPatterns[i];
-				p = Pattern.compile(patternStr);
-				Matcher m = p.matcher(tmpLog);
-				isFixing = m.find();
-				if (isFixing) {
-					break;
-				}
-			}
-		}
-		return isFixing;
 	}
 }

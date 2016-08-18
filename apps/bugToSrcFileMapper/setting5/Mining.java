@@ -8,16 +8,12 @@ import java.util.List;
 
 public class Mining {
 	private VCSModule svn;
-	private String userName;
-	private String projName;
 	private HashMap<String, List<Integer>> fileBugIndex;
 	private String bugURL;
 	private String product;
 
 	public Mining(String url, String path, String bug_url) {
-		this.userName = url.substring(0, url.indexOf('@'));
 		url = url.substring(url.indexOf('@') + 1);
-		this.projName = url.substring(url.lastIndexOf('/') + 1);
 		try {
 			ForgeModule.clone(url, path);
 		} catch (SVNException e) {
@@ -68,9 +64,7 @@ public class Mining {
 			}
 		}
 
-		System.out.println(issues.toString());
 		HashMap<String, Integer> bugCounter = new HashMap<>();
-		System.out.println("Total buggy files: " + bugsrcMapper.fileBugIndex.size());
 		for (String name : bugsrcMapper.fileBugIndex.keySet()) {
 			int count = bugsrcMapper.fileBugIndex.get(name).size();
 			System.out.println(name + " -> " + count);
@@ -78,6 +72,6 @@ public class Mining {
 				bugCounter.put(name, count);
 			}
 		}
-		Visualization.saveGraph(bugCounter, args[1] + bugsrcMapper.projName + "bugFileMapper.html");
+		Visualization.saveGraph(bugCounter, args[1]  + "bugFileMapper.html");
 	}
 }

@@ -22,23 +22,15 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BugModule {
-	private List<Issue> _issues;
 	private Project project;
-	private String user;
-	private String proj;
 	private final Gson gson;
 	private final URLBuilder builder;
-	private final Requests requests;
 
 	public BugModule(String username, String projName) {
 		Injector injector = Guice.createInjector(new SearchModule());
-		this._issues = new ArrayList<>();
 		User user = new User(username);
 		this.project = new Project(user, projName);
 		this.project = new Project(user, projName);
-		this.user = username;
-		this.proj = projName;
-		this.requests = new Requests();
 		this.gson = new Gson();
 		this.builder = Guice.createInjector(new HttpModule()).getInstance(URLBuilder.class);
 	}
@@ -134,7 +126,7 @@ public class BugModule {
 			String searchUrl = builder.withParam("https://api.github.com/repos")
 					.withSimpleParam("/", project.getOwner().getLogin()).withSimpleParam("/", project.getName())
 					.withParam("/issues").withParam("?state=all&").withParam("page=" + pageNumber).build();
-			String jsonString = this.requests.get(searchUrl);
+			String jsonString = new Requests().get(searchUrl);
 			List<IssueLabel> lables = new ArrayList<IssueLabel>();
 			if (!jsonString.equals("[]") && !jsonString.contains("\"message\":\"API rate limit exceeded for")
 					&& !jsonString.contains("bad credentials")) {

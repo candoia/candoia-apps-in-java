@@ -19,16 +19,12 @@ import java.util.regex.Pattern;
 
 public class VCSModule {
 	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
-	private FileRepositoryBuilder builder;
 	private Repository repository;
 	private Git git;
-	private String path;
 
 	public VCSModule(String path) {
-		this.builder = new FileRepositoryBuilder();
-		this.path = path;
 		try {
-			this.repository = this.builder.setGitDir(new File(path + "/.git")).setMustExist(true).build();
+			this.repository = new FileRepositoryBuilder().setGitDir(new File(path + "/.git")).setMustExist(true).build();
 			this.git = new Git(this.repository);
 		} catch (IOException e) {
 			e.printStackTrace();

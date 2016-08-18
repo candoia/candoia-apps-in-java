@@ -21,35 +21,31 @@ import java.util.List;
 
 public class BugModule {
 	private Project project;
-	private final Gson gson;
 	private final URLBuilder builder;
-	private final Requests requests;
 
 	public BugModule(String username, String projName) {
 		User user = new User(username);
 		this.project = new Project(user, projName);
 		this.project = new Project(user, projName);
-		this.requests = new Requests();
-		this.gson = new Gson();
 		this.builder = Guice.createInjector(new HttpModule()).getInstance(URLBuilder.class);
 	}
 
 	public static char[] readPassword() {
 		char[] pwd = null;
-		Console cnsl = null;
-		char[] password = null;
-		try {
-			cnsl = System.console();
-			if (cnsl != null) {
-				password = cnsl.readPassword("Password: ");
-			} else {
-				return readLine().toCharArray();
+			Console cnsl = null;
+			char[] password = null;
+			try {
+				cnsl = System.console();
+				if (cnsl != null) {
+					password = cnsl.readPassword("Password: ");
+				} else {
+					return readLine().toCharArray();
+				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
 			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		pwd = password;
-		return password;
+			pwd = password;
+			return password;
 	}
 
 	private static String readLine() throws IOException {
@@ -59,7 +55,6 @@ public class BugModule {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		return reader.readLine();
 	}
-
 	private boolean isBug(List<Issue> issues, int id) {
 		for (Issue issue : issues) {
 			if (id == issue.getNumber()) {
@@ -68,7 +63,6 @@ public class BugModule {
 		}
 		return false;
 	}
-
 	public List<Integer> getIssueIDsFromCommitLog(String log, List<Issue> issues) {
 		List<Integer> ids = getIdsFromCommitMsg(log);
 		List<Integer> bugs = new ArrayList<>();
@@ -83,22 +77,18 @@ public class BugModule {
 	public List<Integer> getIdsFromCommitMsg(String commitLog) {
 		String commitMsg = commitLog;
 		commitMsg = commitMsg.replaceAll("[^0-9]+", " ");
+		List<String> idAsString = Arrays.asList(commitMsg.trim().split(" "));
 		List<Integer> ids = new ArrayList<Integer>();
-		if (commitMsg.trim().length() > 0) {
-			List<String> idAsString = Arrays.asList(commitMsg.trim().split(" "));
-			for (String id : idAsString) {
-				try {
-					if (!ids.contains(Integer.parseInt(id)))
-						ids.add(Integer.parseInt(id));
-				} catch (NumberFormatException e) {
-					e.printStackTrace();
-				}
+		for (String id : idAsString) {
+			try {
+				if (!ids.contains(Integer.parseInt(id)))
+					ids.add(Integer.parseInt(id));
+			} catch (NumberFormatException e) {
+				 e.printStackTrace();
 			}
 		}
-
 		return ids;
 	}
-
 	public List<Integer> getIssueNumbers(List<Issue> issues) {
 		List<Integer> ids = new ArrayList<Integer>();
 		for (Issue issue : issues) {
@@ -120,43 +110,18 @@ public class BugModule {
 		return false;
 	}
 
-	public Issue getIssueWithNumber(ArrayList<Issue> issues, int number) {
-		for (Issue i : issues) {
-			if (i.getNumber() == number) {
-				return i;
-			}
-		}
-		return null;
-	}
-
-	public ArrayList<Issue> getIssue(String msg, ArrayList<Issue> issues) {
-		ArrayList<Issue> results = new ArrayList<>();
-		if (VCSModule.isFixingRevision(msg)) {
-			List<Integer> ids = getIssueNumbers(issues);
-			List<Integer> bugs = getIdsFromCommitMsg(msg);
-			for (Integer i : bugs) {
-				if (ids.contains(i)) {
-					results.add(getIssueWithNumber(issues, i));
-				}
-			}
-		}
-		return results;
-	}
-
 	public List<Issue> getIssues() {
 		int pageNumber = 1;
 		List<Issue> issues = new ArrayList<Issue>();
-
+		Gson gson = new Gson();
 		while (true) {
 			String searchUrl = builder.withParam("https://api.github.com/repos")
 					.withSimpleParam("/", project.getOwner().getLogin()).withSimpleParam("/", project.getName())
 					.withParam("/issues").withParam("?state=all&").withParam("page=" + pageNumber).build();
-			String jsonString = this.requests.get(searchUrl);
+			String jsonString = new Requests().get(searchUrl);
 			List<IssueLabel> lables = new ArrayList<IssueLabel>();
 			if (!jsonString.equals("[]") && !jsonString.contains("\"message\":\"API rate limit exceeded for")
 					&& !jsonString.contains("bad credentials")) {
-				if (pageNumber % 10 == 0)
-					System.out.println("page:" + pageNumber);
 				try {
 					JsonArray jsonArray = gson.fromJson(jsonString, JsonArray.class);
 

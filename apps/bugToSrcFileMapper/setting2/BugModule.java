@@ -9,13 +9,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class BugModule {
-	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
 
-	public final List<Issue> importBugs(String url, String product) throws Exception {
+	public final List<Issue> getIssues(String url, String product) throws Exception {
 		List<Issue> issues = new ArrayList<>();
 		BugzillaHttpSession session = new BugzillaHttpSession();
 		session.setBaseUrl(new URL(url)); // https://landfill.bugzilla.org/bugzilla-tip/
@@ -33,7 +30,7 @@ public class BugModule {
 	}
 
 	public boolean isFixingRevision(String msg, List<Issue> issues) {
-		if (isFixingRevision(msg)) {
+		if (VCSModule.isFixingRevision(msg)) {
 			List<String> ids = getIssueNumbers(issues);
 			List<Integer> bugs = getIdsFromCommitMsg(msg);
 			for (Integer i : bugs) {
@@ -43,24 +40,6 @@ public class BugModule {
 			}
 		}
 		return false;
-	}
-
-	public boolean isFixingRevision(String commitLog) {
-		boolean isFixing = false;
-		Pattern p;
-		if (commitLog != null) {
-			String tmpLog = commitLog.toLowerCase();
-			for (int i = 0; i < fixingPatterns.length; i++) {
-				String patternStr = fixingPatterns[i];
-				p = Pattern.compile(patternStr);
-				Matcher m = p.matcher(tmpLog);
-				isFixing = m.find();
-				if (isFixing) {
-					break;
-				}
-			}
-		}
-		return isFixing;
 	}
 
 	public List<String> getIssueNumbers(List<Issue> issues) {

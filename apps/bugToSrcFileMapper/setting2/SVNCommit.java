@@ -31,7 +31,7 @@ public class SVNCommit {
 	protected Date date;
 	protected String committer;
 	private SVNLogEntry entry;
-	
+
     /** {@inheritDoc} */
     public void setId(final String id) {
         this.svnId = Long.parseLong(id);

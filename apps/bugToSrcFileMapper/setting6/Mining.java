@@ -3,14 +3,11 @@ package bugToSrcFileMapper.setting6;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import setting3.bugFileMapper.BugModule;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-;
 
 /**
  * Created by nmtiwari on 7/20/16. A class for mapping the files with bugs. This
@@ -58,11 +55,11 @@ public class Mining {
 		int totalRevs = revisions.size();
 		// get all the issues of the projects.
 		BugModule bugs = new BugModule(bugsrcMapper.bugURL, bugsrcMapper.product);
-		List<b4j.core.Issue> issues = new ArrayList<>();
-		System.out.println(bugsrcMapper.bugURL + "\n" + bugsrcMapper.product);
+		List<br.ufpe.cin.groundhog.Issue> issues = new ArrayList<>();
 		try {
 			issues = bugs.getIssues();
 		} catch (Exception e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -99,7 +96,6 @@ public class Mining {
 
 		}
 
-		// print all the values
 		HashMap<String, Integer> bugCounter = new HashMap<>();
 		for (String name : bugsrcMapper.fileBugIndex.keySet()) {
 			int count = bugsrcMapper.fileBugIndex.get(name).size();

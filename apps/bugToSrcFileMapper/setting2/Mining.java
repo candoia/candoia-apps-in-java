@@ -1,7 +1,6 @@
 package bugToSrcFileMapper.setting2;
 
 import org.tmatesoft.svn.core.SVNException;
-import org.tmatesoft.svn.core.io.SVNRepository;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,8 +29,6 @@ public class Mining {
 	}
 
 	public static void main(String[] args) {
-		long startTime = System.currentTimeMillis();
-		int index = 0;
 		Mining bugsrcMapper = null;
 		// path of the repository
 		if (args.length == 3) {
@@ -46,12 +43,10 @@ public class Mining {
 		List<b4j.core.Issue> issues = new ArrayList<>();
 		System.out.println(bugsrcMapper.bugURL + "\n" + bugsrcMapper.product);
 		try {
-			issues = bugs.importBugs(bugsrcMapper.bugURL, bugsrcMapper.product);
+			issues = bugs.getIssues(bugsrcMapper.bugURL, bugsrcMapper.product);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-		SVNRepository repository = bugsrcMapper.svn.getRepository();
 
 		for (int i = 0; i < totalRevs; i++) {
 			SVNCommit revision = revisions.get(i);
@@ -73,10 +68,7 @@ public class Mining {
 			}
 
 		}
-
-		System.out.println(issues.toString());
 		HashMap<String, Integer> bugCounter = new HashMap<>();
-		System.out.println("Total buggy files: " + bugsrcMapper.fileBugIndex.size());
 		for (String name : bugsrcMapper.fileBugIndex.keySet()) {
 			int count = bugsrcMapper.fileBugIndex.get(name).size();
 			System.out.println(name + " -> " + count);

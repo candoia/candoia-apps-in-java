@@ -40,8 +40,6 @@ public class Mining {
 	}
 
 	public static void main(String[] args) {
-		long startTime = System.currentTimeMillis();
-		int index = 0;
 		Mining bugsrcMapper = null;
 		if (args.length == 2) {
 			bugsrcMapper = new Mining(args[0], args[1]);
@@ -76,9 +74,7 @@ public class Mining {
 
 		}
 
-		System.out.println(issues.toString());
 		HashMap<String, Integer> bugCounter = new HashMap<>();
-		System.out.println("Total buggy files: " + bugsrcMapper.fileBugIndex.size());
 		for (String name : bugsrcMapper.fileBugIndex.keySet()) {
 			int count = bugsrcMapper.fileBugIndex.get(name).size();
 			System.out.println(name + " -> " + count);
