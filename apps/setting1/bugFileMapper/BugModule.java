@@ -20,16 +20,12 @@ import br.ufpe.cin.groundhog.http.Requests;
 
 public class BugModule {
 	private Project project;
-	private final Gson gson;
 	private final URLBuilder builder;
-	private final Requests requests;
 
 	public BugModule(String username, String projName) {
 		User user = new User(username);
 		this.project = new Project(user, projName);
 		this.project = new Project(user, projName);
-		this.requests = new Requests();
-		this.gson = new Gson();
 		this.builder = Guice.createInjector(new HttpModule()).getInstance(URLBuilder.class);
 	}
 
@@ -116,17 +112,15 @@ public class BugModule {
 	public List<Issue> getIssues() {
 		int pageNumber = 1;
 		List<Issue> issues = new ArrayList<Issue>();
-
+		Gson gson = new Gson();
 		while (true) {
 			String searchUrl = builder.withParam("https://api.github.com/repos")
 					.withSimpleParam("/", project.getOwner().getLogin()).withSimpleParam("/", project.getName())
 					.withParam("/issues").withParam("?state=all&").withParam("page=" + pageNumber).build();
-			String jsonString = this.requests.get(searchUrl);
+			String jsonString = new Requests().get(searchUrl);
 			List<IssueLabel> lables = new ArrayList<IssueLabel>();
 			if (!jsonString.equals("[]") && !jsonString.contains("\"message\":\"API rate limit exceeded for")
 					&& !jsonString.contains("bad credentials")) {
-				if (pageNumber % 10 == 0)
-					System.out.println("page:" + pageNumber);
 				try {
 					JsonArray jsonArray = gson.fromJson(jsonString, JsonArray.class);
 

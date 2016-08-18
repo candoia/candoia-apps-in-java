@@ -24,11 +24,9 @@ public class Mining {
 			try {
 				ForgeModule.clone(url, path);
 			} catch (IOException | GitAPIException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-
 		this.git = new VCSModule(path);
 	}
 
