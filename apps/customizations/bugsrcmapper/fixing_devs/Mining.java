@@ -1,14 +1,13 @@
-package customizations.bugsrcmapper.barToPieChart;
+package customizations.bugsrcmapper.fixing_devs;
 
 import br.ufpe.cin.groundhog.Issue;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by nmtiwari on 7/20/16. A class for mapping the files with bugs. This
@@ -20,7 +19,7 @@ public class Mining {
 	private VCSModule git;
 	private String userName;
 	private String projName;
-	private HashMap<String, List<Integer>> fileBugIndex;
+	private HashMap<String, List<String>> fileBugIndex;
 
 	public Mining(String url, String path) {
 		this.userName = url.substring(0, url.indexOf('@'));
@@ -38,6 +37,28 @@ public class Mining {
 		this.fileBugIndex = new HashMap<>();
 	}
 
+	public HashMap<String, ArrayList<String>> getModuleDevCounter(HashMap<String, List<Issue>> file_issues) {
+		HashMap<String, ArrayList<String>> devCounter = new HashMap<>();
+		for (String file : file_issues.keySet()) {
+			String module = file;
+			int index = file.lastIndexOf('/');
+			if (index > -1) {
+				module = file.substring(0, index);
+			}
+			ArrayList<String> devs = devCounter.get(module);
+			if (devs == null) {
+				devs = new ArrayList<String>();
+			}
+			for (Issue issue : file_issues.get(file)) {
+				if (!devs.contains(issue.getClosedBy().getName())) {
+					devs.add(issue.getClosedBy().getName());
+				}
+			}
+			devCounter.put(module, devs);
+		}
+		return devCounter;
+	}
+
 	public static void main(String[] args) {
 		Mining bugsrcMapper = null;
 		if (args.length == 2) {
@@ -53,15 +74,25 @@ public class Mining {
 			if (bugIds.isFixingRevision(revision.getFullMessage(), issues)) {
 				try {
 					List<String> files = bugsrcMapper.git.readElementsAt(repository, revision.getId().getName());
+					List<Issue> bugs = bugIds.getIssueIDsFromCommitLog(revision.getFullMessage(), issues);
 					for (String name : files) {
-						List<Integer> bugs = bugIds.getIssueIDsFromCommitLog(revision.getFullMessage(), issues);
-						if (!bugsrcMapper.fileBugIndex.containsValue(name)) {
-							bugsrcMapper.fileBugIndex.put(name, bugs);
-						} else {
-							List<Integer> alreadyAssigned = bugsrcMapper.fileBugIndex.get(name);
-							for (Integer bugId : bugs) {
-								if (!alreadyAssigned.contains(bugId)) {
-									alreadyAssigned.add(bugId);
+						if (name.contains(".") && !name.endsWith(".jar")) {
+							if (name.contains("/")) {
+								name = name.substring(0, name.lastIndexOf('/'));
+							}
+							for (Issue bug : bugs) {
+								if (!bugsrcMapper.fileBugIndex.containsKey(name)) {
+									if (bug.getClosedBy() != null) {
+										ArrayList<String> fixedBy = new ArrayList<>();
+										fixedBy.add(bug.getClosedBy().getLogin());
+										bugsrcMapper.fileBugIndex.put(name, fixedBy);
+									}
+								} else {
+									List<String> alreadyAssigned = bugsrcMapper.fileBugIndex.get(name);
+									if (bug.getClosedBy() != null
+											&& !alreadyAssigned.contains(bug.getClosedBy().getLogin())) {
+										alreadyAssigned.add(bug.getClosedBy().getLogin());
+									}
 								}
 							}
 						}
@@ -70,16 +101,11 @@ public class Mining {
 					e.printStackTrace();
 				}
 			}
-
 		}
-
 		HashMap<String, Integer> bugCounter = new HashMap<>();
-		for (String name : bugsrcMapper.fileBugIndex.keySet()) {
-			int count = bugsrcMapper.fileBugIndex.get(name).size();
-			System.out.println(name + " -> " + count);
-			if (count > 2) {
-				bugCounter.put(name, count);
-			}
+		for (String module : bugsrcMapper.fileBugIndex.keySet()) {
+			int count = bugsrcMapper.fileBugIndex.get(module).size();
+			bugCounter.put(module, count);
 		}
 		Visualization.saveGraph(bugCounter, args[1] + "/bugSrcMapper_" + bugsrcMapper.projName + ".html");
 	}

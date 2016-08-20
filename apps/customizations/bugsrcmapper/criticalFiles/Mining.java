@@ -37,9 +37,9 @@ public class Mining {
 		this.fileBugIndex = new HashMap<>();
 	}
 
-	List<String> getTopNKeys(HashMap<String, List<Issue>> map, int top){
+	List<String> getTopNKeys(HashMap<String, List<Issue>> map, int top) {
 		Set<String> keysSet = map.keySet();
-		ArrayList<String>keys = new ArrayList<>(keysSet);
+		ArrayList<String> keys = new ArrayList<>(keysSet);
 		Collections.sort(keys, new Comparator<String>() {
 
 			@Override
@@ -51,9 +51,16 @@ public class Mining {
 					public int compare(Issue o1, Issue o2) {
 						Date closeO1 = o1.getClosedAt();
 						Date closeO2 = o2.getClosedAt();
-						long s1Diff = (closeO1 != null ? closeO1.getTime() : 0) - o1.getCreatedAt().getTime();
+						if (closeO1 == null && closeO2 == null) {
+							return 0;
+						} else if (closeO1 == null) {
+							return 1;
+						} else if (closeO2 == null) {
+							return -1;
+						}
+						long s1Diff = closeO1.getTime() - o1.getCreatedAt().getTime();
 						long s1Days = s1Diff / (60 * 60 * 1000);
-						long s2Diff = (closeO2 != null ? closeO2.getTime() : 0) - o2.getCreatedAt().getTime();
+						long s2Diff = closeO2.getTime() - o2.getCreatedAt().getTime();
 						long s2Days = s2Diff / (60 * 60 * 1000);
 						if (s1Days == s2Days) {
 							return 0;
@@ -70,13 +77,20 @@ public class Mining {
 				Issue i2 = s2Issues.get(0);
 				Date closedS1 = i1.getClosedAt();
 				Date closedS2 = i2.getClosedAt();
-				long s1Diff = (closedS1 != null ? closedS1.getTime() : 0) - i1.getCreatedAt().getTime();
-				if(s1Diff < 0){
+				if (closedS1 == null && closedS2 == null) {
+					return 0;
+				} else if (closedS1 == null) {
+					return 1;
+				} else if (closedS2 == null) {
+					return -1;
+				}
+				long s1Diff = closedS1.getTime() - i1.getCreatedAt().getTime();
+				if (s1Diff < 0) {
 					s1Diff = -1 * s1Diff;
 				}
 				long s1Days = s1Diff / (60 * 60 * 1000);
-				long s2Diff = (closedS2 != null ? closedS2.getTime() : 0) - i2.getCreatedAt().getTime();
-				if(s2Diff < 0){
+				long s2Diff = closedS2.getTime() - i2.getCreatedAt().getTime();
+				if (s2Diff < 0) {
 					s2Diff = -1 * s2Diff;
 				}
 				long s2Days = s2Diff / (60 * 60 * 1000);
@@ -90,9 +104,8 @@ public class Mining {
 
 			}
 		});
-		return keys.subList(0,top);
+		return keys.subList(0, top);
 	}
-
 
 	public static void main(String[] args) {
 		Mining bugsrcMapper = null;
@@ -111,15 +124,18 @@ public class Mining {
 					List<String> files = bugsrcMapper.git.readElementsAt(repository, revision.getId().getName());
 					List<Issue> bugs = bugIds.getIssueIDsFromCommitLog(revision.getFullMessage(), issues);
 					for (String name : files) {
-						if (!bugsrcMapper.fileBugIndex.containsValue(name)) {
-							bugsrcMapper.fileBugIndex.put(name, bugs);
-						} else {
-							List<Issue> alreadyAssigned = bugsrcMapper.fileBugIndex.get(name);
-							for (Issue bug: bugs) {
-								if (!alreadyAssigned.contains(bug)) {
-									alreadyAssigned.add(bug);
+						if (name.contains(".") && !name.endsWith(".jar")) {
+							if (!bugsrcMapper.fileBugIndex.containsKey(name)) {
+								bugsrcMapper.fileBugIndex.put(name, bugs);
+							} else {
+								List<Issue> alreadyAssigned = bugsrcMapper.fileBugIndex.get(name);
+								for (Issue bug : bugs) {
+									if (!alreadyAssigned.contains(bug)) {
+										alreadyAssigned.add(bug);
+									}
 								}
 							}
+
 						}
 					}
 				} catch (IOException e) {
@@ -128,15 +144,9 @@ public class Mining {
 			}
 
 		}
-		
-		for(String key: bugsrcMapper.fileBugIndex.keySet()){
-           System.out.println(key + "--->" + bugsrcMapper.fileBugIndex.get(key).size());
-		}
-		
 		HashMap<String, Integer> bugCounter = new HashMap<>();
-		for (String name : bugsrcMapper.getTopNKeys(bugsrcMapper.fileBugIndex, 10)) {
+		for (String name : bugsrcMapper.getTopNKeys(bugsrcMapper.fileBugIndex, 50)) {
 			int count = bugsrcMapper.fileBugIndex.get(name).size();
-			System.out.println(name + " -> " + count);
 			bugCounter.put(name, count);
 		}
 		Visualization.saveGraph(bugCounter, args[1] + "/bugSrcMapper_" + bugsrcMapper.projName + ".html");

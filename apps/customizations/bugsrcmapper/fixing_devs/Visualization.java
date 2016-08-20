@@ -1,4 +1,4 @@
-package customizations.bugsrcmapper.criticalFiles;
+package customizations.bugsrcmapper.fixing_devs;
 
 import java.io.File;
 import java.io.FileWriter;
