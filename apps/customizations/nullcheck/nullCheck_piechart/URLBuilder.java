@@ -1,11 +1,11 @@
-package setting1.customization.nullCheck_buglife;
+package customizations.nullcheck.nullCheck_piechart;
+
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.Map;
-
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 public final class URLBuilder {
 

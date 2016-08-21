@@ -1,19 +1,18 @@
-package setting1.customization.nullCheck_buglife;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.inject.Guice;
-import com.google.inject.Inject;
+package customizations.nullcheck.nullCheck_piechart;
 
 import br.ufpe.cin.groundhog.Issue;
 import br.ufpe.cin.groundhog.IssueLabel;
 import br.ufpe.cin.groundhog.Project;
 import br.ufpe.cin.groundhog.http.HttpModule;
 import br.ufpe.cin.groundhog.http.Requests;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /*
  * A class for searching all the issues of the github repository

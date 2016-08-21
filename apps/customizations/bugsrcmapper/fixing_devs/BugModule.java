@@ -1,4 +1,4 @@
-package setting1.bugFileMapper;
+package customizations.bugsrcmapper.fixing_devs;
 
 import java.io.BufferedReader;
 import java.io.Console;
@@ -7,10 +7,12 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.inject.Guice;
+
 import br.ufpe.cin.groundhog.Issue;
 import br.ufpe.cin.groundhog.IssueLabel;
 import br.ufpe.cin.groundhog.Project;
@@ -54,23 +56,25 @@ public class BugModule {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		return reader.readLine();
 	}
-	private boolean isBug(List<Issue> issues, int id) {
-		for (Issue issue : issues) {
-			if (id == issue.getNumber()) {
-				return true;
-			}
-		}
-		return false;
-	}
-	public List<Integer> getIssueIDsFromCommitLog(String log, List<Issue> issues) {
+	public List<Issue> getIssueIDsFromCommitLog(String log, List<Issue> issues) {
 		List<Integer> ids = getIdsFromCommitMsg(log);
-		List<Integer> bugs = new ArrayList<>();
+		List<Issue> bugs = new ArrayList<>();
 		for (Integer i : ids) {
-			if (isBug(issues, i)) {
-				bugs.add(i);
+			Issue issue = getIssueWithId(i, issues);
+			if(issue != null){
+				bugs.add(issue);
 			}
 		}
 		return bugs;
+	}
+
+	public Issue getIssueWithId(Integer id, List<Issue> issues){
+		for(Issue i: issues){
+			if(i.getNumber() == id){
+				return i;
+			}
+		}
+		return null;
 	}
 
 	public List<Integer> getIdsFromCommitMsg(String commitLog) {
@@ -80,15 +84,16 @@ public class BugModule {
 		List<Integer> ids = new ArrayList<Integer>();
 		for (String id : idAsString) {
 			try {
-				if (!ids.contains(Integer.parseInt(id)))
+				if (id.trim().length() > 0 && !ids.contains(Integer.parseInt(id)))
 					ids.add(Integer.parseInt(id));
 			} catch (NumberFormatException e) {
-				 //e.printStackTrace();
+				 e.printStackTrace();
 			}
 		}
 		return ids;
 	}
-	public List<Integer> getIssueNumbers(List<Issue> issues) {
+	
+	private List<Integer> getIssueNumbers(List<Issue> issues) {
 		List<Integer> ids = new ArrayList<Integer>();
 		for (Issue issue : issues) {
 			ids.add(issue.getNumber());
@@ -118,6 +123,7 @@ public class BugModule {
 					.withSimpleParam("/", project.getOwner().getLogin()).withSimpleParam("/", project.getName())
 					.withParam("/issues").withParam("?state=all&").withParam("page=" + pageNumber).build();
 			String jsonString = new Requests().get(searchUrl);
+			System.out.println(jsonString);
 			List<IssueLabel> lables = new ArrayList<IssueLabel>();
 			if (!jsonString.equals("[]") && !jsonString.contains("\"message\":\"API rate limit exceeded for")
 					&& !jsonString.contains("bad credentials")) {
@@ -131,21 +137,24 @@ public class BugModule {
 							IssueLabel label = gson.fromJson(lab, IssueLabel.class);
 							lables.add(label);
 						}
+						JsonElement obj = element.getAsJsonObject();
+						issue.setClosedBy(new User(element.getAsJsonObject().get("user").getAsJsonObject().get("login").getAsString()));
 						issue.setLabels(lables);
 						issues.add(issue);
 						lables.clear();
 					}
-				} catch (java.lang.ClassCastException e) {
+				} catch (ClassCastException e) {
 					JsonElement element = gson.fromJson(jsonString, JsonElement.class);
 					Issue issue = gson.fromJson(element, Issue.class);
 					issue.setProject(project);
+					issue.setClosedBy(new User(element.getAsJsonObject().get("user").getAsJsonObject().get("login").getAsString()));
 					try {
 						for (JsonElement lab : element.getAsJsonObject().get("labels").getAsJsonArray()) {
 							IssueLabel label = gson.fromJson(lab, IssueLabel.class);
 							lables.add(label);
 						}
 
-					} catch (java.lang.NullPointerException ex) {
+					} catch (NullPointerException ex) {
 						ex.printStackTrace();
 					}
 					issue.setLabels(lables);

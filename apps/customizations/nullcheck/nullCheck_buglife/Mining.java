@@ -1,18 +1,18 @@
-package setting1.nullCheck;
+package customizations.nullcheck.nullCheck_buglife;
 
 import br.ufpe.cin.groundhog.Issue;
-import setting1.bugFileMapper.BugModule;
-
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
+import setting1.bugFileMapper.BugModule;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -75,10 +75,19 @@ public class Mining {
 		}
 		long endTime = System.currentTimeMillis();
 		HashMap<String, Integer> result = new HashMap<>();
-		result.put("total revs", totalRevs);
-		result.put("fixing revisions", fixingRevs.size());
-		result.put("Null fixing revisions", nullFixingRevs.size());
-		Visualization.saveGraph(result, "/Users/nmtiwari/Desktop/null.html");
+//		result.put("total revs", totalRevs);
+//		result.put("fixing revisions", fixingRevs.size());
+//		result.put("Null fixing revisions", nullFixingRevs.size());
+		for(RevCommit entry: fixingRevs){
+		  Date d = new Date(entry.getCommitTime());
+		  if(result.containsKey(d.toString())){
+			  result.put(d.toString(), result.get(d.toString())+1);  
+		  }else{
+			  result.put(d.toString(), 1);
+		  }
+		}
+		Visualization.saveGraph(result, args[1]+"_null.html");
+		System.out.println("Time: " + (endTime - startTime) / 1000.000);
 	}
 
 	private int countNullCheckAdditions(ObjectId lastCommitId, ObjectId oldCommit, DiffEntry diff) {

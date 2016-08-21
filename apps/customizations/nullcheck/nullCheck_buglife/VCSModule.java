@@ -1,4 +1,4 @@
-package setting1.customization.nullCheck_buglife;
+package customizations.nullcheck.nullCheck_buglife;
 
 import java.io.File;
 import java.io.IOException;

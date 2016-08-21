@@ -1,4 +1,4 @@
-package setting1.bugFileMapper;
+package customizations.bugsrcmapper.barToPieChart;
 
 import java.io.BufferedReader;
 import java.io.Console;
@@ -80,10 +80,10 @@ public class BugModule {
 		List<Integer> ids = new ArrayList<Integer>();
 		for (String id : idAsString) {
 			try {
-				if (!ids.contains(Integer.parseInt(id)))
+				if (id.trim().length() > 0 && !ids.contains(Integer.parseInt(id)))
 					ids.add(Integer.parseInt(id));
 			} catch (NumberFormatException e) {
-				 //e.printStackTrace();
+				 e.printStackTrace();
 			}
 		}
 		return ids;

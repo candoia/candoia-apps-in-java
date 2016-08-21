@@ -1,16 +1,5 @@
 package setting1.customization.nullCheck_buglife;
 
-import br.ufpe.cin.groundhog.Issue;
-import br.ufpe.cin.groundhog.IssueLabel;
-import br.ufpe.cin.groundhog.Project;
-import br.ufpe.cin.groundhog.User;
-import br.ufpe.cin.groundhog.http.HttpModule;
-import br.ufpe.cin.groundhog.http.Requests;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.inject.Guice;
-
 import java.io.BufferedReader;
 import java.io.Console;
 import java.io.IOException;
@@ -18,6 +7,18 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.inject.Guice;
+
+import br.ufpe.cin.groundhog.Issue;
+import br.ufpe.cin.groundhog.IssueLabel;
+import br.ufpe.cin.groundhog.Project;
+import br.ufpe.cin.groundhog.User;
+import br.ufpe.cin.groundhog.http.HttpModule;
+import br.ufpe.cin.groundhog.http.Requests;
 
 public class BugModule {
 	private Project project;

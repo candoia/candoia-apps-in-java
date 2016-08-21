@@ -1,4 +1,4 @@
-package setting1.customization.nullCheck_piechart;
+package customizations.bugsrcmapper.criticalFiles;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -13,7 +13,7 @@ public class Visualization {
             "          title: '#Null Checks',\n" +
             "          is3D: true,\n" +
             "        };";
-    static String footer = "var chart = new google.visualization.PieChart(document.getElementById('piechart_3d'));\n" +
+    static String footer = "var chart = new google.visualization.ColumnChart(document.getElementById('piechart_3d'));\n" +
             "        chart.draw(data, options);\n" +
             "      }\n" +
             "    </script>\n" +
@@ -33,7 +33,7 @@ public class Visualization {
     private static String headerE = " ]);";
 
     private static String convert(HashMap<String, Integer> map) {
-        String result = "['METHOD', '# Weeks in Open status'],";
+        String result = "['METHOD', 'NUMBER OF USAGE'],";
         for (String k : map.keySet()) {
             result += "['" + k + "', " + map.get(k) + "],\n";
         }

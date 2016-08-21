@@ -1,18 +1,18 @@
-package setting1.nullCheck;
+package customizations.nullcheck.nullCheck_revision;
 
 import br.ufpe.cin.groundhog.Issue;
-import setting1.bugFileMapper.BugModule;
-
 import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
+import setting1.bugFileMapper.BugModule;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -48,6 +48,7 @@ public class Mining {
 		ArrayList<RevCommit> revisions = nullCheck.git.getAllRevisions();
 		ArrayList<RevCommit> nullFixingRevs = new ArrayList<RevCommit>();
 		ArrayList<RevCommit> fixingRevs = new ArrayList<RevCommit>();
+		HashMap<RevCommit, Integer> filesChanged = new HashMap<>();
 		BugModule bugIds = new BugModule(nullCheck.userName, nullCheck.projName);
 		List<Issue> issues = bugIds.getIssues();
 		int totalRevs = revisions.size();
@@ -57,6 +58,7 @@ public class Mining {
 			RevCommit revisionNew = revisions.get(i - 1);
 			try {
 				List<DiffEntry> diffs = nullCheck.git.diffsBetweenTwoRevAndChangeTypes(revisionNew, revisionOld);
+				filesChanged.put(revisionNew, diffs.size());
 				String commitMsg = revisionNew.getFullMessage();
 				if (nullCheck.git.isFixingRevision(commitMsg)) {
 					fixingRevs.add(revisionNew);
@@ -75,10 +77,12 @@ public class Mining {
 		}
 		long endTime = System.currentTimeMillis();
 		HashMap<String, Integer> result = new HashMap<>();
-		result.put("total revs", totalRevs);
-		result.put("fixing revisions", fixingRevs.size());
-		result.put("Null fixing revisions", nullFixingRevs.size());
-		Visualization.saveGraph(result, "/Users/nmtiwari/Desktop/null.html");
+		for (RevCommit r : nullFixingRevs) {
+			Date d = new Date(r.getCommitTime());
+			result.put(d.toString(), filesChanged.get(r));
+		}
+		Visualization.saveGraph(result, args[1]+"/null_check.html");
+		System.out.println("Time: " + (endTime - startTime) / 1000.000);
 	}
 
 	private int countNullCheckAdditions(ObjectId lastCommitId, ObjectId oldCommit, DiffEntry diff) {
