@@ -7,8 +7,6 @@ import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.revwalk.RevCommit;
-import setting1.bugFileMapper.BugModule;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,8 +44,7 @@ public class Mining {
 		}
 
 		ArrayList<RevCommit> revisions = nullCheck.git.getAllRevisions();
-		ArrayList<RevCommit> nullFixingRevs = new ArrayList<RevCommit>();
-		ArrayList<RevCommit> fixingRevs = new ArrayList<RevCommit>();
+		ArrayList<Issue> nullFixingIssues = new ArrayList<Issue>();
 		BugModule bugIds = new BugModule(nullCheck.userName, nullCheck.projName);
 		List<Issue> issues = bugIds.getIssues();
 		int totalRevs = revisions.size();
@@ -58,14 +55,12 @@ public class Mining {
 			try {
 				List<DiffEntry> diffs = nullCheck.git.diffsBetweenTwoRevAndChangeTypes(revisionNew, revisionOld);
 				String commitMsg = revisionNew.getFullMessage();
-				if (nullCheck.git.isFixingRevision(commitMsg)) {
-					fixingRevs.add(revisionNew);
-				}
 				for (DiffEntry diff : diffs) {
-					if (bugIds.isFixingRevision(commitMsg, issues)) {
+					ArrayList<Issue> rev_Issue = bugIds.getIssueFromCommitLog(commitMsg, issues);
+					if (!rev_Issue.isEmpty()) {
 						int count = nullCheck.countNullCheckAdditions(revisionNew.getId(), revisionOld.getId(), diff);
 						if (count > 0) {
-							nullFixingRevs.add(revisionNew);
+							nullFixingIssues.addAll(rev_Issue);
 						}
 					}
 				}
@@ -74,22 +69,17 @@ public class Mining {
 			}
 		}
 		long endTime = System.currentTimeMillis();
-		HashMap<String, Integer> result = new HashMap<>();
-//		result.put("total revs", totalRevs);
-//		result.put("fixing revisions", fixingRevs.size());
-//		result.put("Null fixing revisions", nullFixingRevs.size());
-		for(RevCommit entry: fixingRevs){
-		  Date d = new Date(entry.getCommitTime());
-		  if(result.containsKey(d.toString())){
-			  result.put(d.toString(), result.get(d.toString())+1);  
-		  }else{
-			  result.put(d.toString(), 1);
+		HashMap<String, Long> result = new HashMap<>();
+		for(Issue entry: nullFixingIssues){
+		  Date d1 = entry.getCreatedAt();
+		  Date d2 = entry.getClosedAt();
+		  if(d2 != null){
+			  result.put(entry.getTitle(), (d2.getTime()-d1.getTime()/ (1000*1000*25*7)));  
 		  }
 		}
 		Visualization.saveGraph(result, args[1]+"_null.html");
 		System.out.println("Time: " + (endTime - startTime) / 1000.000);
 	}
-
 	private int countNullCheckAdditions(ObjectId lastCommitId, ObjectId oldCommit, DiffEntry diff) {
 		int numOfNullCheckAdds = 0;
 		String oldPath = diff.getOldPath();

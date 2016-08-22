@@ -32,7 +32,7 @@ public class Visualization {
             "      function drawChart() {\nvar data = google.visualization.arrayToDataTable([\n";
     private static String headerE = " ]);";
 
-    private static String convert(HashMap<String, Integer> map) {
+    private static String convert(HashMap<String, Long> map) {
         String result = "['METHOD', '# Weeks in Open status'],";
         for (String k : map.keySet()) {
             result += "['" + k + "', " + map.get(k) + "],\n";
@@ -46,7 +46,7 @@ public class Visualization {
         return header + data + headerE + "\n" + option + "\n" + footer;
     }
 
-    public static void saveGraph(HashMap<String, Integer> grpData, String path) {
+    public static void saveGraph(HashMap<String, Long> grpData, String path) {
         String result = convert(grpData);
         result = getDataAsGraph(result);
 

@@ -16,12 +16,16 @@ public class AprioryAssociation {
         String[] options = new String[2];
         options[0] = "-R";                // "range"
         options[1] = "first-last";                 // first attribute
-
         weka.filters.unsupervised.attribute.StringToNominal strToNom = new weka.filters.unsupervised.attribute.StringToNominal(); // new instance of filter
-
         strToNom.setOptions(options);                           // set options
         strToNom.setInputFormat(data);                          // inform filter about dataset **AFTER** setting options
         Instances data2 = Filter.useFilter(data, strToNom);
+        String[] option = new String[4];
+		option[0] = "-C";
+		option[1] = "0.001";
+		option[2] = "-D";
+		option[3] = "0.005";
+		model.setOptions(option);
         model.buildAssociations(data2);
         System.out.println(model);
     }
@@ -33,13 +37,4 @@ public class AprioryAssociation {
             e.printStackTrace();
         }
     }
-    
-    public static void main(String[] args) {
-        try {
-            performAssociation("/Users/nmtiwari/Desktop/output.arff");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
 }

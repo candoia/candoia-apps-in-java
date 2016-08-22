@@ -4,6 +4,8 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
+import setting1.bugFileMapper.BugModule;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,21 +14,26 @@ import java.util.List;
 public class Mining {
 	private VCSModule git;
 	public String url;
+	private String userName;
+	private String projName;
 	private HashMap<Integer, String> fileIndex;
 
 	public Mining(String url, String path) {
 		this.url = url.substring(url.indexOf('@') + 1);
-		if (!new File(path).isDirectory()){
+		this.userName = url.substring(0, url.indexOf('@'));
+		this.projName = url.substring(url.lastIndexOf('/') + 1);
+		if (!new File(path).isDirectory()) {
 			try {
 				ForgeModule.clone(url, path);
-			} catch (GitAPIException |IOException e) {
+			} catch (GitAPIException | IOException e) {
 				e.printStackTrace();
-			} 
+			}
 		}
-			
+
 		this.git = new VCSModule(path);
 		fileIndex = new HashMap<>();
 	}
+
 	public static void main(String[] args) {
 		int index = 0;
 		Mining mining = null;
@@ -38,6 +45,7 @@ public class Mining {
 			throw new IllegalArgumentException();
 		}
 		ArrayList<RevCommit> revisions = mining.git.getAllRevisions();
+		BugModule bugIds = new BugModule(mining.userName, mining.projName);
 		int totalRevs = revisions.size();
 		List<String> associations = new ArrayList<>();
 		Repository repository = mining.git.getRepository();
@@ -83,6 +91,7 @@ public class Mining {
 			}
 		}
 	}
+
 	private static String buildArffFile(List<String> text, HashMap<Integer, String> fileIndex) {
 		StringBuilder br = new StringBuilder();
 		br.append(buildArffheader(fileIndex.size()));

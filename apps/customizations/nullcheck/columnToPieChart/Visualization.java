@@ -1,4 +1,4 @@
-package customizations.nullcheck.columnToBarChart;
+package customizations.nullcheck.columnToPieChart;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -13,7 +13,7 @@ public class Visualization {
             "          title: '#Null Checks',\n" +
             "          is3D: true,\n" +
             "        };";
-    static String footer = "var chart = new google.visualization.PieChart(document.getElementById('piechart_3d'));\n" +
+    static String footer = "var chart = new google.visualization.ColumnChart(document.getElementById('piechart_3d'));\n" +
             "        chart.draw(data, options);\n" +
             "      }\n" +
             "    </script>\n" +

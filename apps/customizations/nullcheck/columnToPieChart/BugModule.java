@@ -1,4 +1,4 @@
-package customizations.nullcheck.columnToBarChart;
+package customizations.nullcheck.columnToPieChart;
 
 import java.io.BufferedReader;
 import java.io.Console;

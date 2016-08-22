@@ -9,7 +9,7 @@ import weka.filters.Filter;
  * Created by nmtiwari on 7/20/16.
  */
 public class AprioryAssociation {
-    public static void performAssociation(String arff) throws Exception {
+    public static void performAssociation(String arff) throws java.lang.Exception {
         ConverterUtils.DataSource dataSource = new ConverterUtils.DataSource(arff);
         Instances data = dataSource.getDataSet();
         Apriori model = new Apriori();

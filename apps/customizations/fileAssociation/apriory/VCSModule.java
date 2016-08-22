@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -70,5 +72,35 @@ public class VCSModule {
 		treeWalk.close();
 		revWalk.close();
 		return items;
+	}
+
+	public List<DiffEntry> diffsBetweenTwoRevAndChangeTypes(RevCommit cur, RevCommit prev)
+			throws RevisionSyntaxException, IOException, GitAPIException {
+		List<DiffEntry> diffs = new ArrayList<>();
+		ObjectReader reader = this.repository.newObjectReader();
+		CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
+		oldTreeIter.reset(reader, prev.getTree());
+		CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
+		newTreeIter.reset(reader, cur.getTree());
+		diffs = this.git.diff().setNewTree(newTreeIter).setOldTree(oldTreeIter).call();
+		return diffs;
+	}
+	
+	public static boolean isFixingRevision(String commitLog) {
+		boolean isFixing = false;
+		Pattern p;
+		if (commitLog != null) {
+			String tmpLog = commitLog.toLowerCase();
+			for (int i = 0; i < fixingPatterns.length; i++) {
+				String patternStr = fixingPatterns[i];
+				p = Pattern.compile(patternStr);
+				Matcher m = p.matcher(tmpLog);
+				isFixing = m.find();
+				if (isFixing) {
+					break;
+				}
+			}
+		}
+		return isFixing;
 	}
 }

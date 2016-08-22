@@ -1,4 +1,4 @@
-package customizations.nullcheck.columnToBarChart;
+package customizations.nullcheck.columnToPieChart;
 
 import br.ufpe.cin.groundhog.Issue;
 import setting1.bugFileMapper.BugModule;
