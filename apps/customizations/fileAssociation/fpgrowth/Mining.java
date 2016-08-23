@@ -9,14 +9,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.revwalk.RevCommit;
-
 import br.ufpe.cin.groundhog.Issue;
-import setting1.bugFileMapper.BugModule;
+import weka.associations.FPGrowth;
+import weka.core.Instances;
+import weka.core.converters.ConverterUtils;
+import weka.filters.Filter;
 
 public class Mining {
 	private VCSModule git;
@@ -63,11 +66,22 @@ public class Mining {
 				List<DiffEntry> diffs = mining.git.diffsBetweenTwoRevAndChangeTypes(revisionNew, revisionOld);
 				List<String> files = new ArrayList<>();
 				for (DiffEntry e : diffs) {
+					String path = "";
 					if (e.getChangeType() == ChangeType.DELETE) {
-						files.add(e.getOldPath());
+						org.eclipse.jdt.core.dom.ASTNode node = mining.git
+								.createAst(mining.git.readFile(revisionOld, e.getOldPath()));
+						org.eclipse.jdt.core.dom.PackageDeclaration packageD = ((CompilationUnit)node).getPackage();
+						if(packageD != null)
+							  path = packageD.getName().getFullyQualifiedName();
 					} else {
-						files.add(e.getNewPath());
+						org.eclipse.jdt.core.dom.ASTNode node = mining.git
+								.createAst(mining.git.readFile(revisionNew, e.getNewPath()));
+						org.eclipse.jdt.core.dom.PackageDeclaration packageD = ((CompilationUnit)node).getPackage();
+						if(packageD != null)
+						  path = packageD.getName().getFullyQualifiedName();
 					}
+					if(path.length() > 1)
+					  files.add(path);
 				}
 				String filesInRev = "";
 				for (String name : files) {
@@ -83,7 +97,12 @@ public class Mining {
 			}
 		}
 		saveToFile(buildArffFile(associations, mining.fileIndex), arffPath);
-		FPGrowthAlgo.runAssociation(arffPath);
+		try {
+			performAssociation(arffPath, args[1] + "/" + mining.projName + ".html");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private static void saveToFile(String strContent, String fileNameAndPath) {
@@ -145,5 +164,26 @@ public class Mining {
 		}
 		br.append("@DATA\n");
 		return br.toString();
+	}
+	
+	public static void performAssociation(String arff, String path) throws java.lang.Exception {
+		ConverterUtils.DataSource dataSource = new ConverterUtils.DataSource(arff);
+		Instances data = dataSource.getDataSet();
+		FPGrowth model = new FPGrowth();
+		String[] options = new String[2];
+		options[0] = "-R"; // "range"
+		options[1] = "first-last"; // first attribute
+		weka.filters.unsupervised.attribute.StringToNominal strToNom = new weka.filters.unsupervised.attribute.StringToNominal(); // new
+		strToNom.setOptions(options); // set options
+		strToNom.setInputFormat(data); // inform filter about dataset **AFTER**
+		Instances data2 = Filter.useFilter(data, strToNom);
+		String[] option = new String[4];
+		option[0] = "-C";
+		option[1] = "0.001";
+		option[2] = "-D";
+		option[3] = "0.005";
+		model.setOptions(option);
+		model.buildAssociations(data2);
+		Visualization.saveGraph(model.toString(), path);
 	}
 }

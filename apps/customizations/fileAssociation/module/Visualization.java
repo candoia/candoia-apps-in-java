@@ -1,4 +1,4 @@
-package customizations.fileAssociation.fpgrowth;
+package customizations.fileAssociation.module;
 
 import java.io.File;
 import java.io.FileWriter;

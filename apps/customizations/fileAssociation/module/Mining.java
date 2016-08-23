@@ -1,4 +1,4 @@
-package customizations.fileAssociation.apriory;
+package customizations.fileAssociation.module;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -61,7 +61,7 @@ public class Mining {
 		for (int i = totalRevs - 1; i > 0; i--) {
 			RevCommit revisionOld = revisions.get(i);
 			RevCommit revisionNew = revisions.get(i - 1);
-			if(bugs.isFixingRevision(revisionNew.getFullMessage(), issues)){
+			if (bugs.isFixingRevision(revisionNew.getFullMessage(), issues)) {
 				List<DiffEntry> diffs = mining.git.diffsBetweenTwoRevAndChangeTypes(revisionNew, revisionOld);
 				List<String> files = new ArrayList<>();
 				for (DiffEntry e : diffs) {
@@ -97,7 +97,7 @@ public class Mining {
 		}
 		saveToFile(buildArffFile(associations, mining.fileIndex), arffPath);
 		try {
-			performAssociation(arffPath, "/Users/nmtiwari/Desktop/temp.html");
+			performAssociation(arffPath, args[1] + "/" + mining.projName + ".html");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

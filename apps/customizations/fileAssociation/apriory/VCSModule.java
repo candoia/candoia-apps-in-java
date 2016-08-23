@@ -2,16 +2,23 @@ package customizations.fileAssociation.apriory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -20,6 +27,7 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.treewalk.filter.PathFilter;
 
 public class VCSModule {
 	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
@@ -102,5 +110,43 @@ public class VCSModule {
 			}
 		}
 		return isFixing;
+	}
+	
+	public ASTNode createAst(String fileContent) {
+		Map<String, String> options = JavaCore.getOptions();
+		options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
+		options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
+		options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
+		ASTParser parser = ASTParser.newParser(AST.JLS3);
+		parser.setSource(fileContent.toCharArray());
+		parser.setCompilerOptions(options);
+		ASTNode ast = parser.createAST(null);
+		return ast;
+	}
+	
+	public String readFile(ObjectId lastCommitId, String path) throws IOException {
+		RevWalk revWalk = new RevWalk(this.repository);
+		RevCommit commit = revWalk.parseCommit(lastCommitId);
+		RevTree tree = commit.getTree();
+		TreeWalk treeWalk = new TreeWalk(this.repository);
+		treeWalk.addTree(tree);
+		treeWalk.setRecursive(true);
+		treeWalk.setFilter(PathFilter.create(path));
+		if (!treeWalk.next()) {
+			revWalk.close();
+			treeWalk.close();
+			throw new IllegalStateException(path);
+		}
+		ObjectId objectId = treeWalk.getObjectId(0);
+		ObjectLoader loader = this.repository.open(objectId);
+		InputStream in = loader.openStream();
+		java.util.Scanner s = new java.util.Scanner(in);
+		s.useDelimiter("\\A");
+		String result = s.hasNext() ? s.next() : "";
+		s.close();
+		in.close();
+		revWalk.close();
+		treeWalk.close();
+		return result;
 	}
 }

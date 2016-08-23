@@ -1,4 +1,4 @@
-package customizations.fileAssociation.fpgrowth;
+package customizations.fileAssociation.module;
 
 import java.io.File;
 import java.io.IOException;
@@ -93,7 +93,7 @@ public class VCSModule {
 		diffs = this.git.diff().setNewTree(newTreeIter).setOldTree(oldTreeIter).call();
 		return diffs;
 	}
-	
+
 	public static boolean isFixingRevision(String commitLog) {
 		boolean isFixing = false;
 		Pattern p;
@@ -111,7 +111,7 @@ public class VCSModule {
 		}
 		return isFixing;
 	}
-	
+
 	public ASTNode createAst(String fileContent) {
 		Map<String, String> options = JavaCore.getOptions();
 		options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
