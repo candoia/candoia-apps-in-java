@@ -8,29 +8,34 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.errors.RevisionSyntaxException;
+import org.tmatesoft.svn.core.SVNLogEntry;
 
-import org.tmatesoft.svn.core.SVNException;
 public class Mining {
-	public String url;
 	private VCSModule svn;
+	public String url;
+	private String userName;
+	private String projName;
 	private HashMap<Integer, String> fileIndex;
 
 	public Mining(String url, String path) {
 		this.url = url.substring(url.indexOf('@') + 1);
-		url = url.substring(url.indexOf('@') + 1);
-		if (!new File(path).isDirectory()){
+		this.userName = url.substring(0, url.indexOf('@'));
+		this.projName = url.substring(url.lastIndexOf('/') + 1);
+		if (!new File(path).isDirectory()) {
 			try {
 				ForgeModule.clone(url, path);
-			} catch (SVNException e) {
+			} catch (GitAPIException | IOException e) {
 				e.printStackTrace();
 			}
 		}
-		  
+
 		this.svn = new VCSModule(path);
-		this.fileIndex = new HashMap<>();
+		fileIndex = new HashMap<>();
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws RevisionSyntaxException, IOException, GitAPIException {
 		int index = 0;
 		Mining mining = null;
 		String arffPath = "";
@@ -43,21 +48,32 @@ public class Mining {
 		ArrayList<SVNCommit> revisions = mining.svn.getAllRevisions();
 		int totalRevs = revisions.size();
 		List<String> associations = new ArrayList<>();
-		for (int i = 0; i < totalRevs; i++) {
-			SVNCommit revision = revisions.get(i);
-			String filesInRev = "";
-			List<String> files = revision.getFiles();
-			for (String name : files) {
-				filesInRev += ("," + name);
-				if (!mining.fileIndex.containsValue(name)) {
-					mining.fileIndex.put(index, name);
-					index++;
+		BugModule bugs = new BugModule();
+		List<SVNTicket> issues = bugs.getIssues(mining.userName, mining.projName);
+		for (int i = totalRevs - 1; i > 0; i--) {
+			SVNCommit revisionOld = revisions.get(i);
+			SVNCommit revisionNew = revisions.get(i - 1);
+			if (bugs.isFixingRevision(revisionNew.getMessage(), issues)) {
+				ArrayList<SVNLogEntry> diffs = mining.svn.diffsBetweenTwoRevAndChangeTypes(revisionNew, revisionOld);
+				String filesInRev = "";
+				List<String> files = new ArrayList<String>();
+				for (SVNLogEntry entry : diffs) {
+					for (String k : entry.getChangedPaths().keySet()) {
+						files.add(entry.getChangedPaths().get(k).getPath());
+					}
+					for (String name : files) {
+						filesInRev += ("," + name);
+						if (!mining.fileIndex.containsValue(name)) {
+							mining.fileIndex.put(index, name);
+							index++;
+						}
+					}
+					if (filesInRev.length() > 0) {
+						associations.add(filesInRev.substring(1));
+					}
 				}
 			}
-			if (filesInRev.length() > 0)
-				associations.add(filesInRev.substring(1));
 		}
-		System.out.println(mining.fileIndex.size());
 		saveToFile(buildArffFile(associations, mining.fileIndex), arffPath);
 		AprioryAssociation.runAssociation(arffPath);
 	}
@@ -88,18 +104,22 @@ public class Mining {
 		StringBuilder br = new StringBuilder();
 		br.append(buildArffheader(fileIndex.size()));
 		for (String str : text) {
-			int counter = 0;
 			String entry = "";
 			for (Integer i : fileIndex.keySet()) {
 				String fileName = fileIndex.get(i);
 				if (str.contains(fileName)) {
 					entry += ("," + fileName);
-					counter++;
 				} else {
 					entry += (",?");
 				}
 			}
-			if (counter > 6) {
+			int count = 0;
+			for (String s : entry.substring(1).split(",")) {
+				if (s.length() > 1) {
+					count++;
+				}
+			}
+			if (count > 10) {
 				br.append(entry.substring(1));
 				br.append("\n");
 			}

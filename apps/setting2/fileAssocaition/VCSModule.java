@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
@@ -16,7 +19,6 @@ import org.tmatesoft.svn.core.internal.io.fs.FSRepositoryFactory;
 import org.tmatesoft.svn.core.internal.io.svn.SVNRepositoryFactoryImpl;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory;
-import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNWCUtil;
 
 public class VCSModule {
@@ -30,9 +32,9 @@ public class VCSModule {
 	private SVNRepository repository = null;
 	private SVNURL url;
 	private ISVNAuthenticationManager authManager;
-	private SVNClientManager clientManager = null;
 	private long lastSeenRevision = 1l;
 	private long latestRevision = 0l;
+
 	public VCSModule(final String url) {
 		try {
 			this.url = SVNURL.fromFile(new File(url));
@@ -96,4 +98,41 @@ public class VCSModule {
 	public SVNRepository getRepository() {
 		return this.repository;
 	}
+
+	public ArrayList<SVNLogEntry> diffsBetweenTwoRevAndChangeTypes(SVNCommit revisionNew, SVNCommit revisionOld) {
+		try {
+			repository.setAuthenticationManager(authManager);
+			Collection logEntries = new ArrayList<>();
+			ArrayList<SVNLogEntry> result = new ArrayList<>();
+			logEntries = repository.log(new String[] { "" }, null, revisionOld.getId(), revisionNew.getId(), true,
+					true);
+			for (Iterator entries = logEntries.iterator(); entries.hasNext();) {
+				SVNLogEntry logEntry = (SVNLogEntry) entries.next();
+				result.add(logEntry);
+			}
+			return result;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static boolean isFixingRevision(String commitLog) {
+		boolean isFixing = false;
+		Pattern p;
+		if (commitLog != null) {
+			String tmpLog = commitLog.toLowerCase();
+			for (int i = 0; i < fixingPatterns.length; i++) {
+				String patternStr = fixingPatterns[i];
+				p = Pattern.compile(patternStr);
+				Matcher m = p.matcher(tmpLog);
+				isFixing = m.find();
+				if (isFixing) {
+					break;
+				}
+			}
+		}
+		return isFixing;
+	}
+
 }

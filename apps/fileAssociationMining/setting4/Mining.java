@@ -3,12 +3,10 @@ package fileAssociationMining.setting4;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
 public class Mining {
 	private VCSModule git;
 	public String url;
@@ -113,5 +111,4 @@ public class Mining {
 		br.append("@DATA\n");
 		return br.toString();
 	}
-
 }

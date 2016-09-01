@@ -1,31 +1,44 @@
 package setting4.fileAssociationMining;
 
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.diff.DiffEntry.ChangeType;
+import org.eclipse.jgit.errors.RevisionSyntaxException;
+import org.eclipse.jgit.revwalk.RevCommit;
+
 public class Mining {
 	private VCSModule git;
 	public String url;
+	private String userName;
+	private String projName;
 	private HashMap<Integer, String> fileIndex;
-	
+
 	public Mining(String url, String path) {
 		this.url = url.substring(url.indexOf('@') + 1);
-		if (!new File(path).isDirectory()){
+		this.userName = url.substring(0, url.indexOf('@'));
+		this.projName = url.substring(url.lastIndexOf('/') + 1);
+		if (!new File(path).isDirectory()) {
 			try {
 				ForgeModule.clone(url, path);
-			} catch (GitAPIException |IOException e) {
+			} catch (GitAPIException | IOException e) {
 				e.printStackTrace();
-			} 
+			}
 		}
-			
+
 		this.git = new VCSModule(path);
 		fileIndex = new HashMap<>();
 	}
-	public static void main(String[] args) {
+
+	public static void main(String[] args) throws RevisionSyntaxException, IOException, GitAPIException {
 		int index = 0;
 		Mining mining = null;
 		String arffPath = "";
@@ -38,12 +51,22 @@ public class Mining {
 		ArrayList<RevCommit> revisions = mining.git.getAllRevisions();
 		int totalRevs = revisions.size();
 		List<String> associations = new ArrayList<>();
-		Repository repository = mining.git.getRepository();
-		for (int i = 0; i < totalRevs; i++) {
-			RevCommit revision = revisions.get(i);
-			try {
+		BugModule bugs = new BugModule();
+		List<SVNTicket> issues = bugs.getIssues(mining.userName, mining.projName);
+		for (int i = totalRevs - 1; i > 0; i--) {
+			RevCommit revisionOld = revisions.get(i);
+			RevCommit revisionNew = revisions.get(i - 1);
+			if (bugs.isFixingRevision(revisionNew.getFullMessage(), issues)) {
+				List<DiffEntry> diffs = mining.git.diffsBetweenTwoRevAndChangeTypes(revisionNew, revisionOld);
+				List<String> files = new ArrayList<>();
+				for (DiffEntry e : diffs) {
+					if (e.getChangeType() == ChangeType.DELETE) {
+						files.add(e.getOldPath());
+					} else {
+						files.add(e.getNewPath());
+					}
+				}
 				String filesInRev = "";
-				List<String> files = mining.git.readElementsAt(repository, revision.getId().getName());
 				for (String name : files) {
 					filesInRev += ("," + name);
 					if (!mining.fileIndex.containsValue(name)) {
@@ -51,9 +74,9 @@ public class Mining {
 						index++;
 					}
 				}
-				associations.add(filesInRev.substring(1));
-			} catch (IOException e) {
-				e.printStackTrace();
+				if (filesInRev.length() > 0) {
+					associations.add(filesInRev.substring(1));
+				}
 			}
 		}
 		saveToFile(buildArffFile(associations, mining.fileIndex), arffPath);
@@ -81,6 +104,7 @@ public class Mining {
 			}
 		}
 	}
+
 	private static String buildArffFile(List<String> text, HashMap<Integer, String> fileIndex) {
 		StringBuilder br = new StringBuilder();
 		br.append(buildArffheader(fileIndex.size()));
@@ -94,8 +118,16 @@ public class Mining {
 					entry += (",?");
 				}
 			}
-			br.append(entry.substring(1));
-			br.append("\n");
+			int count = 0;
+			for (String s : entry.substring(1).split(",")) {
+				if (s.length() > 1) {
+					count++;
+				}
+			}
+			if (count > 10) {
+				br.append(entry.substring(1));
+				br.append("\n");
+			}
 		}
 		return br.toString();
 	}
@@ -111,5 +143,4 @@ public class Mining {
 		br.append("@DATA\n");
 		return br.toString();
 	}
-
 }

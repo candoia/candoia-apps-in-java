@@ -61,22 +61,22 @@ public class BugModule {
 		return reader.readLine();
 	}
 
-	private boolean isBug(List<Issue> issues, int id) {
+	private Issue getIssue(List<Issue> issues, int id) {
 		for (Issue issue : issues) {
 			if (id == issue.getNumber()) {
-				return true;
+				return issue;
 			}
 		}
-		return false;
+		return null;
 	}
 
-	public List<Integer> getIssueIDsFromCommitLog(String log, List<Issue> issues) {
+	public ArrayList<Issue> getIssueFromCommitLog(String log, List<Issue> issues) {
 		List<Integer> ids = getIdsFromCommitMsg(log);
-		List<Integer> bugs = new ArrayList<>();
+		ArrayList<Issue> bugs = new ArrayList<>();
 		for (Integer i : ids) {
-			if (isBug(issues, i)) {
-				bugs.add(i);
-			}
+			Issue issue = getIssue(issues, i);
+			if(issue != null)
+              bugs.add(issue);
 		}
 		return bugs;
 	}
@@ -91,31 +91,10 @@ public class BugModule {
 				if (!ids.contains(Integer.parseInt(id)))
 					ids.add(Integer.parseInt(id));
 			} catch (NumberFormatException e) {
-				e.printStackTrace();
+//				e.printStackTrace();
 			}
 		}
 		return ids;
-	}
-
-	public List<Integer> getIssueNumbers(List<Issue> issues) {
-		List<Integer> ids = new ArrayList<Integer>();
-		for (Issue issue : issues) {
-			ids.add(issue.getNumber());
-		}
-		return ids;
-	}
-
-	public boolean isFixingRevision(String msg, List<Issue> issues) {
-		if (VCSModule.isFixingRevision(msg)) {
-			List<Integer> ids = getIssueNumbers(issues);
-			List<Integer> bugs = getIdsFromCommitMsg(msg);
-			for (Integer i : bugs) {
-				if (ids.contains(i)) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	public List<Issue> getIssues() {

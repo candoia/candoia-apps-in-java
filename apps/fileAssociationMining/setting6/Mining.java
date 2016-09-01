@@ -3,17 +3,15 @@ package fileAssociationMining.setting6;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
 public class Mining {
 	private VCSModule git;
 	public String url;
 	private HashMap<Integer, String> fileIndex;
-
+	
 	public Mining(String url, String path) {
 		this.url = url.substring(url.indexOf('@') + 1);
 		if (!new File(path).isDirectory()){
@@ -21,9 +19,9 @@ public class Mining {
 				ForgeModule.clone(url, path);
 			} catch (GitAPIException |IOException e) {
 				e.printStackTrace();
-			}
+			} 
 		}
-
+			
 		this.git = new VCSModule(path);
 		fileIndex = new HashMap<>();
 	}
@@ -113,5 +111,4 @@ public class Mining {
 		br.append("@DATA\n");
 		return br.toString();
 	}
-
 }

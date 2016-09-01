@@ -10,32 +10,44 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.tmatesoft.svn.core.SVNException;
+import org.tmatesoft.svn.core.SVNLogEntry;
+
+import setting1.fileAssociationMining.AprioryAssociation;
+import setting2.nullCheck.BugModule;
+
 public class Mining {
 	public String url;
+	private String userName;
+	private String projName;
 	private VCSModule svn;
+	private String bugURL;
+	private String product;
 	private HashMap<Integer, String> fileIndex;
 
-	public Mining(String url, String path) {
+	public Mining(String url, String path, String bug_url) {
 		this.url = url.substring(url.indexOf('@') + 1);
+		this.userName = url.substring(0, url.indexOf('@'));
+		this.projName = url.substring(url.lastIndexOf('/') + 1);
 		url = url.substring(url.indexOf('@') + 1);
-		if (!new File(path).isDirectory()){
+		if (!new File(path).isDirectory()) {
 			try {
 				ForgeModule.clone(url, path);
 			} catch (SVNException e) {
 				e.printStackTrace();
 			}
 		}
-		  
 		this.svn = new VCSModule(path);
 		this.fileIndex = new HashMap<>();
+		this.bugURL = bug_url.substring(bug_url.indexOf('@') + 1);
+		this.product = bug_url.substring(0, bug_url.indexOf('@'));
 	}
 
 	public static void main(String[] args) {
 		int index = 0;
 		Mining mining = null;
 		String arffPath = "";
-		if (args.length == 2) {
-			mining = new Mining(args[0], args[1]);
+		if (args.length == 3) {
+			mining = new Mining(args[0], args[1], args[2]);
 			arffPath = args[1] + "/" + mining.url.substring(mining.url.lastIndexOf('/') + 1) + ".arff";
 		} else {
 			throw new IllegalArgumentException();
@@ -43,21 +55,37 @@ public class Mining {
 		ArrayList<SVNCommit> revisions = mining.svn.getAllRevisions();
 		int totalRevs = revisions.size();
 		List<String> associations = new ArrayList<>();
-		for (int i = 0; i < totalRevs; i++) {
-			SVNCommit revision = revisions.get(i);
-			String filesInRev = "";
-			List<String> files = revision.getFiles();
-			for (String name : files) {
-				filesInRev += ("," + name);
-				if (!mining.fileIndex.containsValue(name)) {
-					mining.fileIndex.put(index, name);
-					index++;
+		BugModule bugs = new BugModule();
+		List<b4j.core.Issue> issues = new ArrayList<>();
+		try {
+			issues = bugs.importBugs(mining.bugURL, mining.product);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		for (int i = totalRevs - 1; i > 0; i--) {
+			SVNCommit revisionOld = revisions.get(i);
+			SVNCommit revisionNew = revisions.get(i - 1);
+			if (bugs.isFixingRevision(revisionNew.getMessage(), issues)) {
+				ArrayList<SVNLogEntry> diffs = mining.svn.diffsBetweenTwoRevAndChangeTypes(revisionNew, revisionOld);
+				String filesInRev = "";
+				List<String> files = new ArrayList<String>();
+				for (SVNLogEntry entry : diffs) {
+					for (String k : entry.getChangedPaths().keySet()) {
+						files.add(entry.getChangedPaths().get(k).getPath());
+					}
+					for (String name : files) {
+						filesInRev += ("," + name);
+						if (!mining.fileIndex.containsValue(name)) {
+							mining.fileIndex.put(index, name);
+							index++;
+						}
+					}
+					if (filesInRev.length() > 0) {
+						associations.add(filesInRev.substring(1));
+					}
 				}
 			}
-			if (filesInRev.length() > 0)
-				associations.add(filesInRev.substring(1));
 		}
-		System.out.println(mining.fileIndex.size());
 		saveToFile(buildArffFile(associations, mining.fileIndex), arffPath);
 		AprioryAssociation.runAssociation(arffPath);
 	}
