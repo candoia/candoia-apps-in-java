@@ -1,4 +1,4 @@
-package setting1.most_freq_changed_files;
+package setting6.most_freq_changed_files;
 
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
