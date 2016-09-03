@@ -28,7 +28,7 @@ public class Mining {
 		this.projName = url.substring(url.lastIndexOf('/') + 1);
 		if (!new File(path).isDirectory()) {
 			try {
-				ForgeModule.clone(url, path);
+				ForgeModule.clone(this.url, path);
 			} catch (GitAPIException | IOException e) {
 				e.printStackTrace();
 			}

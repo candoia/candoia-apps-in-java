@@ -70,8 +70,8 @@ public class Mining {
 				String filesInRev = "";
 				List<String> files = new ArrayList<String>();
 				for (SVNLogEntry entry : diffs) {
-					for (String k : entry.getChangedPaths().keySet()) {
-						files.add(entry.getChangedPaths().get(k).getPath());
+					for (String k : (String[]) entry.getChangedPaths().keySet().toArray(new String[0])) {
+						files.add(k);
 					}
 					for (String name : files) {
 						filesInRev += ("," + name);

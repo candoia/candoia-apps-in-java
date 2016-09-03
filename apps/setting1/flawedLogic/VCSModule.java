@@ -1,10 +1,4 @@
-package setting3.methodCallFrequency;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+package setting1.flawedLogic;
 
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
@@ -18,23 +12,27 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.treewalk.TreeWalk;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 public class VCSModule {
-	private static String[] fixingPatterns = { "\\bfix(s|es|ing|ed)?\\b", "\\b(error|bug|issue)(s)?\\b" };
-	private FileRepositoryBuilder builder;
 	private Repository repository;
 	private Git git;
 	private String path;
 
 	public VCSModule(String path) {
-		this.builder = new FileRepositoryBuilder();
 		this.path = path;
 		try {
-			this.repository = this.builder.setGitDir(new File(path + "/.git")).setMustExist(true).build();
-			this.git = new Git(this.repository);
-		} catch (java.io.IOException e) {
+			this.repository = new FileRepositoryBuilder().setGitDir(new File(path + "/.git")).setMustExist(true).build();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
+
 	public Repository getRepository() {
 		return this.repository;
 	}
