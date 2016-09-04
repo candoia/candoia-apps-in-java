@@ -12,7 +12,6 @@ import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
 
-import setting1.churnRate.Visualization;
 public class Mining {
 	private VCSModule svn;
 	public String url;

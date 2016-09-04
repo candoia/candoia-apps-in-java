@@ -4,7 +4,6 @@ import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
-import setting1.churnRate.Visualization;
 
 import java.io.File;
 import java.util.*;
