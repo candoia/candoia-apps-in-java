@@ -1,4 +1,4 @@
-package setting4.wont_fix_bugs;
+package setting5.wont_fix_bugs;
 
 public class SVNTicket {
 	String id;

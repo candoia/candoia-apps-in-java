@@ -10,11 +10,9 @@ import org.tmatesoft.svn.core.SVNException;
 public class Mining {
 	private String projName;
 	private VCSModule svn;
-	private String url;
 	private HashMap<String, List<Integer>> fileBugIndex;
 
 	public Mining(String url, String path) {
-		this.url = url;
 		this.projName = url.substring(url.lastIndexOf('/') + 1);
 		fileBugIndex = new HashMap<>();
 		if(!new File(path).isDirectory()){
@@ -30,7 +28,6 @@ public class Mining {
 
 	public static void main(String[] args) {
 		Mining bugsrcMapper = null;
-		// path of the repository
 		if (args.length == 2) {
 			bugsrcMapper = new Mining(args[0], args[1]);
 		} else {

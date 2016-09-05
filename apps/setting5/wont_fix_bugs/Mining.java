@@ -1,10 +1,5 @@
-package setting4.wont_fix_bugs;
+package setting5.wont_fix_bugs;
 
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

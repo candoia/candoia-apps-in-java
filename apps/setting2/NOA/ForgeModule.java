@@ -1,4 +1,4 @@
-package setting2.wont_fix_bugs;
+package setting2.NOA;
 
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;

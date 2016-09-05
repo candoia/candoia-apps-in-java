@@ -1,16 +1,13 @@
-package setting1.wont_fix_bugs;
+package setting5.wont_fix_bugs;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.Map;
 
 
 public final class URLBuilder {
 
-    public static String oaToken = null;
     /**
      * Root sources of the API
      *
@@ -136,28 +133,6 @@ public final class URLBuilder {
 
     public URLBuilder withParam(Map<String, Object> params) {
         throw new UnsupportedOperationException("Sorry. Not implemented yet.");
-    }
-
-    /**
-     * Return the url as a string
-     *
-     * @return final url
-     */
-    public String build() {
-        if(this.builder == null)
-            throw new UnsupportedOperationException("No parameter URL has been sent!");
-        String concat = isFirstParam() ? "?" : "&";
-        if(oaToken == null){
-            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-            System.out.println("Please provide your authentication token: ");
-                this.oauthToken = new String(BugModule.readPassword());
-                oaToken = this.oauthToken;
-        }else{
-            this.oauthToken = oaToken;
-        }
-        String result = this.builder.append(concat).append(oauthToken).toString();
-        this.builder.delete(0, result.length());
-        return result;
     }
 
     public String sbuild() {
