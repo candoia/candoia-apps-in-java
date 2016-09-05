@@ -1,13 +1,14 @@
-package setting4.bugFileMapper;
+package setting4.wont_fix_bugs;
+
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import setting4.bugFileMapper.Visualization;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-
 
 /**
  * Created by nmtiwari on 7/20/16. A class for mapping the files with bugs. This
@@ -16,26 +17,25 @@ import org.eclipse.jgit.revwalk.RevCommit;
  * only checks if it was in the same commit, which fixed the bug.
  */
 public class Mining {
-	private String projName;
 	private VCSModule git;
-	private String url;
+	private String userName;
+	private String projName;
 	private HashMap<String, List<Integer>> fileBugIndex;
 
 	/*
 	 * url must be of form: username@url
 	 */
-	public Mining(String url, String path) {
-		this.url = url;
+	public Mining(String url, String path, String bug_url) {
+		this.userName = url.substring(0, url.indexOf('@'));
+		url = url.substring(url.indexOf('@') + 1);
 		this.projName = url.substring(url.lastIndexOf('/') + 1);
-		fileBugIndex = new HashMap<>();
 		try {
 			ForgeModule.clone(url, path);
 		} catch (IOException | GitAPIException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 		this.git = new VCSModule(path);
+		fileBugIndex = new HashMap<>();
 	}
 
 	/*
@@ -43,24 +43,20 @@ public class Mining {
 	 */
 	public static void main(String[] args) {
 		Mining bugsrcMapper = null;
-		// path of the repository
-		if (args.length == 2) {
-			bugsrcMapper = new Mining(args[0], args[1]);
+		if (args.length == 3) {
+			bugsrcMapper = new Mining(args[0], args[1], args[2]);
 		} else {
-			throw new IllegalArgumentException();
+			bugsrcMapper = new Mining("nmtiwari@https://github.com/qos-ch/slf4j",
+					"/Users/nmtiwari/Desktop/test/pagal/slf4j", "SLF4J@http://jira.qos.ch/");
 		}
+		// get all the revisions of the project
 		ArrayList<RevCommit> revisions = bugsrcMapper.git.getAllRevisions();
 		int totalRevs = revisions.size();
+		// get all the issues of the projects.
 		BugModule bugs = new BugModule();
 		List<SVNTicket> issues = new ArrayList<>();
 		try {
-			issues = bugs.getIssues(bugsrcMapper.projName);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		try {
-			issues = bugs.getIssues(bugsrcMapper.projName);
+			issues = bugs.getIssues(bugsrcMapper.userName, bugsrcMapper.projName);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -108,6 +104,6 @@ public class Mining {
 				bugCounter.put(name, count);
 			}
 		}
-		Visualization.saveGraph(bugCounter, args[1] + "bug_file_mapper.html");
+		Visualization.saveGraph(bugCounter, "/Users/nmtiwari/Desktop/bug.html");
 	}
 }

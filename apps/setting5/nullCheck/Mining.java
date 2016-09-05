@@ -20,15 +20,12 @@ import org.tmatesoft.svn.core.SVNLogEntryPath;
 import org.tmatesoft.svn.core.SVNProperties;
 
 public class Mining {
-	private String userName;
 	private String projName;
 	private VCSModule svn;
 	private String url;
-	private String product;
 
 	private Mining(String url, String path) {
 		this.url = url;
-		this.userName = url.substring(0, url.indexOf('@'));
 		this.projName = url.substring(url.lastIndexOf('/') + 1);
 		if(!new File(path).isDirectory()){
 			try {
