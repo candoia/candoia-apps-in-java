@@ -1,12 +1,12 @@
-package setting6.NOA;
+package setting3.convention_checker;
 
-import org.eclipse.wst.jsdt.core.dom.ASTNode;
-import org.eclipse.wst.jsdt.core.dom.ASTVisitor;
-import org.eclipse.wst.jsdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
 import java.io.*;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Mining {
@@ -28,46 +28,41 @@ public class Mining {
 
 	public static void main(String[] args) {
 		Mining mining = new Mining(args[0], args[1]);
-		HashMap<String, Integer> indexMap = mining.analyze();
-		HashMap<String, Integer> results = new HashMap<>();
-		for (String str : indexMap.keySet()) {
-			System.out.println(str + " -> " + indexMap.get(str));
-			if(indexMap.get(str) > 10){
-				results.put(str, indexMap.get(str));	
-			}
+		ArrayList<String> classes = mining.analyze();
+		String results = "";
+		for(String name: classes){
+			results = name+"\n";
 		}
-		Visualization.saveGraph(results, args[1] + "_noa.html");
+		Visualization.saveGraph(results, args[1] + "_methodCallFrequency.html");
 	}
 
-	public HashMap<String, Integer> analyze() {
+	public ArrayList<String> analyze() {
 		List<String> allFiles = this.git.getAllFilesFromHeadWithAbsPath();
-		HashMap<String, Integer> indexMap = new HashMap<String, Integer>();
+		ArrayList<String> classNames = new ArrayList<>();
 		for (String path : allFiles) {
-			if (path.endsWith(".js")) {
+			if (path.endsWith(".java")) {
 				String content = this.readFile(path);
-				org.eclipse.wst.jsdt.core.dom.ASTNode ast = this.git.createAst(content);
-				indexMap = countNOA(ast, indexMap);
+				ASTNode ast = this.git.createAst(content);
+				classNames = conventionChecker(ast, classNames);
 			}
 		}
-		return indexMap;
+		return classNames;
 	}
 
-	private static HashMap<String, Integer> countNOA(ASTNode ast, HashMap<String, Integer> freqRecord) {
-		class NOACounter extends ASTVisitor {
+	private static ArrayList<String> conventionChecker(ASTNode ast, ArrayList<String> classNames) {
+		class Convention extends ASTVisitor {
 			@Override
 			public boolean visit(TypeDeclaration node) {
 				String name = node.getName().getFullyQualifiedName().toString();
-				if (freqRecord.containsKey(name)) {
-					freqRecord.put(name, freqRecord.get(name) + node.getFields().length);
-				} else {
-					freqRecord.put(name, node.getFields().length);
+				if(Character.isLowerCase(name.charAt(0))){
+					classNames.add(name);
 				}
-				return super.visit(node);
+				return true;
 			}
 		}
-		NOACounter v = new NOACounter();
+		Convention v = new Convention();
 		ast.accept(v);
-		return freqRecord;
+		return classNames;
 	}
 
 	private String readFile(String path) {

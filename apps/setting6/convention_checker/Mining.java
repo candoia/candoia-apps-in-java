@@ -1,11 +1,13 @@
-package setting6.NPM;
-
+package setting6.convention_checker;
 
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.wst.jsdt.core.dom.ASTNode;
-import org.eclipse.wst.jsdt.core.dom.FunctionDeclaration;
+import org.eclipse.wst.jsdt.core.dom.ASTVisitor;
+import org.eclipse.wst.jsdt.core.dom.TypeDeclaration;
+import setting1.convention_checker.*;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -28,55 +30,41 @@ public class Mining {
 
 	public static void main(String[] args) {
 		Mining mining = new Mining(args[0], args[1]);
-		HashMap<String, Integer> indexMap = mining.analyze();
-		HashMap<String, Integer> results = new HashMap<>();
-		for (String str : indexMap.keySet()) {
-			System.out.println(str + " -> " + indexMap.get(str));
-			if(indexMap.get(str) > 10){
-				results.put(str, indexMap.get(str));
-			}
+		ArrayList<String> classes = mining.analyze();
+		String results = "";
+		for(String name: classes){
+			results = name+"\n";
 		}
-		Visualization.saveGraph(results, args[1] + "_npm.html");
+		setting1.convention_checker.Visualization.saveGraph(results, args[1] + "_conventionViolation.html");
 	}
 
-	public HashMap<String, Integer> analyze() {
+	public ArrayList<String> analyze() {
 		List<String> allFiles = this.git.getAllFilesFromHeadWithAbsPath();
-		HashMap<String, Integer> indexMap = new HashMap<String, Integer>();
+		ArrayList<String> classNames = new ArrayList<>();
 		for (String path : allFiles) {
 			if (path.endsWith(".js")) {
 				String content = this.readFile(path);
 				ASTNode ast = this.git.createAst(content);
-				indexMap = countNPM(ast, indexMap);
+				classNames = conventionChecker(ast, classNames);
 			}
 		}
-		return indexMap;
+		return classNames;
 	}
 
-	private static HashMap<String, Integer> countNPM(ASTNode ast, HashMap<String, Integer> freqRecord) {
-		class NOACounter extends org.eclipse.wst.jsdt.core.dom.ASTVisitor {
+	private static ArrayList<String> conventionChecker(ASTNode ast, ArrayList<String> classNames) {
+		class Convention extends ASTVisitor {
 			@Override
-			public boolean visit(org.eclipse.wst.jsdt.core.dom.TypeDeclaration node) {
+			public boolean visit(TypeDeclaration node) {
 				String name = node.getName().getFullyQualifiedName().toString();
-				int counter = 0;
-				if (freqRecord.containsKey(name)) {
-					FunctionDeclaration[] methods = node.getMethods();
-					for(FunctionDeclaration declaration: methods){
-						List<org.eclipse.jdt.core.dom.Modifier> modi = declaration.modifiers();
-						for(org.eclipse.jdt.core.dom.Modifier i: modi){
-							if(i.isPublic())
-								counter++;
-						}
-					}
-					freqRecord.put(name, freqRecord.get(name) + counter);
-				} else {
-					freqRecord.put(name, counter);
+				if(Character.isLowerCase(name.charAt(0))){
+					classNames.add(name);
 				}
-				return super.visit(node);
+				return true;
 			}
 		}
-		NOACounter v = new NOACounter();
+		Convention v = new Convention();
 		ast.accept(v);
-		return freqRecord;
+		return classNames;
 	}
 
 	private String readFile(String path) {
