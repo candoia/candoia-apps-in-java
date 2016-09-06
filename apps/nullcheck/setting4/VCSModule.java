@@ -116,8 +116,6 @@ public class VCSModule {
 		treeWalk.setRecursive(true);
 		treeWalk.setFilter(PathFilter.create(path));
 		if (!treeWalk.next()) {
-			revWalk.close();
-			treeWalk.close();
 			throw new IllegalStateException(path);
 		}
 		ObjectId objectId = treeWalk.getObjectId(0);
@@ -128,8 +126,6 @@ public class VCSModule {
 		String result = s.hasNext() ? s.next() : "";
 		s.close();
 		in.close();
-		treeWalk.close();
-		revWalk.close();
 		return result;
 	}
 }

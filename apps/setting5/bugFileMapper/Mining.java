@@ -1,45 +1,44 @@
 package setting5.bugFileMapper;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
 import org.tmatesoft.svn.core.SVNException;
 
+
 public class Mining {
+	private String projName;
 	private VCSModule svn;
 	private HashMap<String, List<Integer>> fileBugIndex;
-	private String bugURL;
-	private String product;
 
-	public Mining(String url, String path, String bug_url) {
-		url = url.substring(url.indexOf('@') + 1);
-		try {
-			ForgeModule.clone(url, path);
-		} catch (SVNException e) {
-			e.printStackTrace();
+	public Mining(String url, String path) {
+		this.projName = url.substring(url.lastIndexOf('/') + 1);
+		fileBugIndex = new HashMap<>();
+		if(!new File(path).isDirectory()){
+			try {
+				ForgeModule.clone(url.substring(url.indexOf('@') + 1), path);
+			} catch (SVNException e) {
+				e.printStackTrace();
+			}
 		}
+
 		this.svn = new VCSModule(path);
-		this.bugURL = bug_url.substring(bug_url.indexOf('@') + 1);
-		this.product = bug_url.substring(0, bug_url.indexOf('@'));
 	}
 
 	public static void main(String[] args) {
 		Mining bugsrcMapper = null;
-		// path of the repository
-		if (args.length == 3) {
-			bugsrcMapper = new Mining(args[0], args[1], args[2]);
+		if (args.length == 2) {
+			bugsrcMapper = new Mining(args[0], args[1]);
 		} else {
-			bugsrcMapper = new Mining("nmtiwari@/Users/nmtiwari/Desktop/test/pagal/panini/",
-					"/Users/nmtiwari/Desktop/test/pagal/panini/svn", "Tomcat 8@https://bz.apache.org/bugzilla");
+			throw new IllegalArgumentException();
 		}
 		ArrayList<SVNCommit> revisions = bugsrcMapper.svn.getAllRevisions();
 		int totalRevs = revisions.size();
 		BugModule bugs = new BugModule();
 		List<SVNTicket> issues = new ArrayList<>();
-		System.out.println(bugsrcMapper.bugURL + "\n" + bugsrcMapper.product);
 		try {
-			issues = bugs.getIssues(bugsrcMapper.bugURL, bugsrcMapper.product);
+			issues = bugs.getIssues(bugsrcMapper.projName);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

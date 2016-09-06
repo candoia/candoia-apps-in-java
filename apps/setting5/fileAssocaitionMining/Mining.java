@@ -11,6 +11,10 @@ import java.util.List;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.tmatesoft.svn.core.SVNLogEntry;
+import weka.associations.Apriori;
+import weka.core.Instances;
+import weka.core.converters.ConverterUtils;
+import weka.filters.Filter;
 
 public class Mining {
 	private VCSModule svn;
@@ -58,8 +62,8 @@ public class Mining {
 				String filesInRev = "";
 				List<String> files = new ArrayList<String>();
 				for (SVNLogEntry entry : diffs) {
-					for (String k : entry.getChangedPaths().keySet()) {
-						files.add(entry.getChangedPaths().get(k).getPath());
+					for (String k : (String[]) entry.getChangedPaths().keySet().toArray(new String[0])) {
+						files.add(k);
 					}
 					for (String name : files) {
 						filesInRev += ("," + name);
@@ -75,7 +79,12 @@ public class Mining {
 			}
 		}
 		saveToFile(buildArffFile(associations, mining.fileIndex), arffPath);
-		AprioryAssociation.runAssociation(arffPath);
+		try {
+			performAssociation(arffPath, "/Users/nmtiwari/Desktop/temp.html");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private static void saveToFile(String strContent, String fileNameAndPath) {
@@ -137,5 +146,26 @@ public class Mining {
 		}
 		br.append("@DATA\n");
 		return br.toString();
+	}
+
+	public static void performAssociation(String arff, String path) throws Exception {
+		ConverterUtils.DataSource dataSource = new ConverterUtils.DataSource(arff);
+		Instances data = dataSource.getDataSet();
+		Apriori model = new Apriori();
+		String[] options = new String[2];
+		options[0] = "-R";                // "range"
+		options[1] = "first-last";                 // first attribute
+		weka.filters.unsupervised.attribute.StringToNominal strToNom = new weka.filters.unsupervised.attribute.StringToNominal(); // new instance of filter
+		strToNom.setOptions(options);                           // set options
+		strToNom.setInputFormat(data);                          // inform filter about dataset **AFTER** setting options
+		Instances data2 = Filter.useFilter(data, strToNom);
+		String[] option = new String[4];
+		option[0] = "-C";
+		option[1] = "0.001";
+		option[2] = "-D";
+		option[3] = "0.005";
+		model.setOptions(option);
+		model.buildAssociations(data2);
+		Visualization.saveGraph(model.toString(), path);
 	}
 }
